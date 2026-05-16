@@ -1,0 +1,151 @@
+# BeConscious - BEGINNER SETUP GUIDE (Zero Knowledge Needed)
+# ============================================================
+# Follow these steps EXACTLY on your personal laptop
+# Total time: ~30-40 minutes (mostly downloading)
+# ============================================================
+
+
+# =====================================================
+# STEP 1: INSTALL FLUTTER (10 minutes)
+# =====================================================
+#
+# 1. Open your browser and go to:
+#    https://docs.flutter.dev/get-started/install/windows/mobile
+#
+# 2. Click "Download Flutter SDK" button (it's a .zip file ~1GB)
+#
+# 3. Once downloaded, extract (unzip) it to: C:\flutter
+#    - Right click the zip → "Extract All" → type C:\flutter
+#    - After extracting, you should see: C:\flutter\bin\flutter.bat
+#
+# 4. Add Flutter to your PATH:
+#    a. Press Windows key, type "Environment Variables"
+#    b. Click "Edit the system environment variables"
+#    c. Click "Environment Variables..." button at bottom
+#    d. Under "User variables", find "Path" and click "Edit"
+#    e. Click "New" and type: C:\flutter\bin
+#    f. Click "OK" on all dialogs
+#
+# 5. CLOSE and REOPEN PowerShell/Terminal
+#
+# 6. Test it works - open PowerShell and type:
+#    flutter --version
+#    (You should see Flutter version info, not an error)
+
+
+# =====================================================
+# STEP 2: INSTALL ANDROID STUDIO (15 minutes)
+# =====================================================
+#
+# 1. Go to: https://developer.android.com/studio
+#
+# 2. Click "Download Android Studio" and install it
+#    - Just click Next, Next, Next... accept all defaults
+#    - It will download ~1.5GB of files during setup
+#
+# 3. Open Android Studio after installation
+#    - It will ask to download Android SDK - say YES
+#    - Wait for it to finish downloading
+#
+# 4. Accept Android licenses:
+#    Open PowerShell and type:
+#    flutter doctor --android-licenses
+#    Press 'y' for every question it asks
+#
+# 5. Verify everything is ready:
+#    flutter doctor
+#    You should see green checkmarks (✓) for:
+#    - Flutter
+#    - Android toolchain
+#    - Android Studio
+
+
+# =====================================================
+# STEP 3: CONNECT YOUR REALME GT6 PHONE (2 minutes)
+# =====================================================
+#
+# ON YOUR PHONE:
+# 1. Go to Settings → About Phone
+# 2. Tap "Build Number" 7 times fast (this enables Developer mode)
+# 3. Go back to Settings → Additional Settings → Developer Options
+# 4. Turn ON "USB Debugging"
+# 5. Connect your phone to laptop with USB cable
+# 6. On phone, a popup will ask "Allow USB debugging?" → Tap "Allow"
+# 7. Select "File Transfer" mode when asked
+#
+# ON YOUR LAPTOP:
+# Open PowerShell and type:
+#    flutter devices
+# You should see your Realme GT6 listed
+
+
+# =====================================================
+# STEP 4: BUILD THE APP (5 minutes)
+# =====================================================
+#
+# 1. Copy the entire "BeConscious" folder to your personal laptop
+#    (from your OneDrive/USB/wherever you transferred it)
+#
+# 2. Open PowerShell and navigate to the folder:
+#    cd C:\path\to\BeConscious
+#    (replace with actual path where you put the folder)
+#
+# 3. Run this ONE command to generate Flutter project files:
+#    flutter create --org com.shivakarthik --project-name beconscious .
+#    (don't forget the dot at the end!)
+#
+# 4. Install all packages:
+#    flutter pub get
+#
+# 5. Run the app on your phone:
+#    flutter run
+#    (Make sure your phone is connected via USB)
+#
+# 6. DONE! The app is now running on your phone!
+
+
+# =====================================================
+# STEP 5: BUILD APK TO INSTALL PERMANENTLY (2 minutes)
+# =====================================================
+#
+# 1. Build the release APK:
+#    flutter build apk --release
+#
+# 2. The APK file will be created at:
+#    build\app\outputs\flutter-apk\app-release.apk
+#
+# 3. Copy this APK to your phone and install it
+#    OR it's already on your phone if you did "flutter run"
+#
+# 4. You can now unplug the USB cable
+#    The app is installed on your phone permanently!
+
+
+# =====================================================
+# TROUBLESHOOTING (If something goes wrong)
+# =====================================================
+#
+# Problem: "flutter is not recognized"
+# Fix: Make sure you added C:\flutter\bin to PATH (Step 1.4)
+#      Then CLOSE and REOPEN PowerShell
+#
+# Problem: "No devices found"
+# Fix: Make sure USB Debugging is ON (Step 3.4)
+#      Try a different USB cable
+#      Make sure "File Transfer" mode is selected
+#
+# Problem: "Android SDK not found"
+# Fix: Open Android Studio → Settings → Android SDK
+#      Note the SDK path → Run:
+#      flutter config --android-sdk "C:\Users\YourName\AppData\Local\Android\Sdk"
+#
+# Problem: "License not accepted"
+# Fix: Run: flutter doctor --android-licenses
+#      Press 'y' for everything
+#
+# Problem: Build errors
+# Fix: Run these commands in order:
+#      flutter clean
+#      flutter pub get
+#      flutter run
+
