@@ -309,7 +309,12 @@ class SavingsDetailScreen extends ConsumerWidget {
               child: ElevatedButton(
                 onPressed: () {
                   final amount = double.tryParse(ctrl.text);
-                  if (amount == null || amount <= 0) return;
+                  if (amount == null || amount <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Enter a valid amount')),
+                    );
+                    return;
+                  }
 
                   ref.read(savingsProvider.notifier).addContribution(
                         goal.id,

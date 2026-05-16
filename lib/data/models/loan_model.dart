@@ -85,7 +85,8 @@ class LoanModel {
       return principalAmount;
     }
     final principalPaid = tp - totalInterestAccrued;
-    return (principalAmount - principalPaid).clamp(0, double.infinity);
+    final remaining = principalAmount - principalPaid;
+    return remaining < 0 ? 0.0 : remaining;
   }
 
   /// Current interest accrued from start date to now
@@ -106,7 +107,7 @@ class LoanModel {
   /// Total amount due right now (principal + interest - payments)
   double get totalDueNow {
     final total = principalAmount + currentInterest - totalPaid;
-    return total.clamp(0, double.infinity);
+    return total < 0 ? 0.0 : total;
   }
 
   /// For loans given: total money you'll receive (principal + interest)
@@ -156,8 +157,8 @@ class LoanModel {
   }
 
   static double _pow(double base, int exponent) {
-    if (exponent == 0) return 1;
-    double result = 1;
+    if (exponent <= 0) return 1.0;
+    double result = 1.0;
     for (int i = 0; i < exponent; i++) {
       result *= base;
     }

@@ -281,7 +281,7 @@ class _LoanList extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: (loan.totalPaid /
                                   (loan.principalAmount + loan.currentInterest))
-                              .clamp(0, 1),
+                              .clamp(0.0, 1.0),
                           backgroundColor: Colors.white12,
                           color: color,
                           minHeight: 4,

@@ -1,28 +1,24 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import '../../../core/theme/app_theme.dart';
-import '../../../data/datasources/local/local_database.dart';
+import '../../../services/backup_service.dart';
 import '../../providers/app_providers.dart';
+import '../../../data/datasources/local/local_database.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final summary = BackupService.getDataSummary();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(20),
         children: [
-          // Profile section
+          // Profile
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -31,66 +27,149 @@ class SettingsScreen extends ConsumerWidget {
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
-                    child: const Text(
-                      'SK',
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: const Text('SK',
+                        style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 16),
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Shiva Karthik',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'BeConscious User',
-                        style: TextStyle(color: Colors.white54, fontSize: 13),
-                      ),
+                      Text('Shiva Karthik',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('BeConscious User',
+                          style:
+                              TextStyle(color: Colors.white54, fontSize: 13)),
                     ],
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Data Summary
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Your Data',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 12),
+                  _DataRow(Icons.receipt_long_rounded, 'Transactions',
+                      '${summary['transactions']}', AppTheme.primaryColor),
+                  _DataRow(Icons.handshake_rounded, 'Loans',
+                      '${summary['loans']}', AppTheme.loanTakenColor),
+                  _DataRow(Icons.savings_rounded, 'Savings Goals',
+                      '${summary['savings']}', AppTheme.savingsColor),
+                  _DataRow(Icons.label_rounded, 'Tags',
+                      '${summary['tags']}', AppTheme.loanGivenColor),
+                  _DataRow(Icons.people_rounded, 'Persons',
+                      '${summary['persons']}', AppTheme.expenseColor),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
 
-          // Data Management
-          Text('Data Management',
+          // Backup & Restore
+          Text('Backup & Restore',
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(
+            'Export your data to keep it safe. Import on a new phone to restore everything.',
+            style: TextStyle(color: Colors.white38, fontSize: 12),
+          ),
           const SizedBox(height: 12),
 
           _SettingsTile(
             icon: Icons.upload_rounded,
-            title: 'Export Data (JSON)',
-            subtitle: 'Export all data as a backup file',
+            title: 'Export Full Backup (JSON)',
+            subtitle: 'Save all data — share via Drive, WhatsApp, Email',
             color: AppTheme.incomeColor,
-            onTap: () => _exportData(context),
+            onTap: () async {
+              final error = await BackupService.exportData(context);
+              if (error != null && context.mounted) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(error)));
+              }
+            },
           ),
 
           _SettingsTile(
             icon: Icons.download_rounded,
-            title: 'Import Data (JSON)',
-            subtitle: 'Restore from a backup file',
+            title: 'Import Backup (JSON)',
+            subtitle: 'Restore data from a backup file',
             color: AppTheme.loanGivenColor,
-            onTap: () => _showImportInfo(context),
+            onTap: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Import Backup?'),
+                  content: const Text(
+                      'This will merge the backup data with your existing data. No data will be lost.\n\nSelect your BeConscious backup JSON file.'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel')),
+                    ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Choose File')),
+                  ],
+                ),
+              );
+
+              if (confirmed != true) return;
+
+              final result = await BackupService.importData();
+              if (!context.mounted) return;
+
+              if (result == null || result == 'No file selected') {
+                return;
+              } else if (result.startsWith('SUCCESS:')) {
+                final count = result.split(':')[1];
+                // Reload all providers
+                ref.read(transactionProvider.notifier).loadAll();
+                ref.read(loanProvider.notifier).loadAll();
+                ref.read(savingsProvider.notifier).loadAll();
+                ref.read(tagProvider.notifier).loadAll();
+                ref.read(personProvider.notifier).loadAll();
+
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('✅ Successfully imported $count items!'),
+                  backgroundColor: AppTheme.incomeColor,
+                ));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('❌ $result'),
+                  backgroundColor: AppTheme.expenseColor,
+                ));
+              }
+            },
           ),
 
           _SettingsTile(
             icon: Icons.table_chart_rounded,
-            title: 'Export as CSV',
-            subtitle: 'Export transactions to spreadsheet',
+            title: 'Export Transactions (CSV)',
+            subtitle: 'Open in Excel / Google Sheets',
             color: AppTheme.savingsColor,
-            onTap: () => _exportCsv(context),
+            onTap: () async {
+              final error =
+                  await BackupService.exportTransactionsCsv(context);
+              if (error != null && context.mounted) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(error)));
+              }
+            },
           ),
           const SizedBox(height: 20),
 
@@ -119,14 +198,44 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
-          // About
-          Text('About',
+          // How Data is Stored
+          Text('Data Storage',
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.phone_android_rounded,
+                          color: AppTheme.incomeColor, size: 20),
+                      const SizedBox(width: 10),
+                      const Text('Stored locally on this phone',
+                          style: TextStyle(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '• All data is saved on your phone only\n'
+                    '• No internet or account needed\n'
+                    '• 100% private — nobody else can see it\n'
+                    '• Use Export to backup before changing phones\n'
+                    '• Use Import on new phone to restore everything',
+                    style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
 
+          // About
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -135,10 +244,9 @@ class SettingsScreen extends ConsumerWidget {
                   const Icon(Icons.psychology_rounded,
                       size: 48, color: AppTheme.primaryColor),
                   const SizedBox(height: 12),
-                  const Text(
-                    'BeConscious',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('BeConscious',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const Text('v1.0.0',
                       style: TextStyle(color: Colors.white38, fontSize: 12)),
                   const SizedBox(height: 8),
@@ -148,15 +256,13 @@ class SettingsScreen extends ConsumerWidget {
                     style: TextStyle(color: Colors.white54, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Built for Shiva Karthik ❤️',
-                    style: TextStyle(color: AppTheme.primaryColor, fontSize: 12),
-                  ),
+                  const Text('Built for Shiva Karthik ❤️',
+                      style:
+                          TextStyle(color: AppTheme.primaryColor, fontSize: 12)),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 24),
 
           // Danger zone
@@ -172,77 +278,7 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => _confirmDeleteAll(context, ref),
             ),
           ),
-
           const SizedBox(height: 40),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _exportData(BuildContext context) async {
-    try {
-      final data = LocalDatabase.exportAllData();
-      final json = const JsonEncoder.withIndent('  ').convert(data);
-      final dir = await getTemporaryDirectory();
-      final file = File(
-          '${dir.path}/beconscious_backup_${DateTime.now().millisecondsSinceEpoch}.json');
-      await file.writeAsString(json);
-
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'BeConscious Backup',
-        text: 'My BeConscious financial data backup',
-      );
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _exportCsv(BuildContext context) async {
-    try {
-      final txns = LocalDatabase.getAllTransactions();
-      final buffer = StringBuffer();
-      buffer.writeln(
-          'Date,Time,Type,Amount,Description,Tags,Money Source,For Whom,Payment Mode,Notes');
-      for (final t in txns) {
-        buffer.writeln(
-            '"${t.dateTime.toIso8601String().split('T')[0]}","${t.dateTime.toIso8601String().split('T')[1].split('.')[0]}","${t.type.name}","${t.amount}","${t.description}","${t.tags.join(', ')}","${t.moneySourcePerson}","${t.beneficiaryPerson}","${t.paymentMode.name}","${t.notes ?? ''}"');
-      }
-
-      final dir = await getTemporaryDirectory();
-      final file = File(
-          '${dir.path}/beconscious_transactions_${DateTime.now().millisecondsSinceEpoch}.csv');
-      await file.writeAsString(buffer.toString());
-
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'BeConscious Transactions',
-      );
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
-        );
-      }
-    }
-  }
-
-  void _showImportInfo(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Import Data'),
-        content: const Text(
-            'To import data, place your backup JSON file in the device storage and tap "Import".\n\nNote: Imported data will be merged with existing data without duplicates.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
-          ),
         ],
       ),
     );
@@ -267,8 +303,7 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: 12),
                 Container(
-                  width: 40,
-                  height: 4,
+                  width: 40, height: 4,
                   decoration: BoxDecoration(
                     color: Colors.white24,
                     borderRadius: BorderRadius.circular(2),
@@ -293,19 +328,18 @@ class SettingsScreen extends ConsumerWidget {
                               content: TextField(
                                 controller: ctrl,
                                 autofocus: true,
-                                decoration: const InputDecoration(
-                                    hintText: 'Tag name'),
+                                textCapitalization: TextCapitalization.words,
+                                decoration:
+                                    const InputDecoration(hintText: 'Tag name'),
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(c),
-                                  child: const Text('Cancel'),
-                                ),
+                                    onPressed: () => Navigator.pop(c),
+                                    child: const Text('Cancel')),
                                 ElevatedButton(
                                   onPressed: () {
                                     if (ctrl.text.trim().isNotEmpty) {
-                                      ref
-                                          .read(tagProvider.notifier)
+                                      ref.read(tagProvider.notifier)
                                           .add(ctrl.text.trim());
                                       Navigator.pop(c);
                                     }
@@ -327,8 +361,7 @@ class SettingsScreen extends ConsumerWidget {
                     itemBuilder: (_, i) => ListTile(
                       leading: CircleAvatar(
                         radius: 16,
-                        backgroundColor:
-                            AppTheme.primaryColor.withOpacity(0.15),
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
                         child: const Icon(Icons.label_rounded,
                             size: 16, color: AppTheme.primaryColor),
                       ),
@@ -369,8 +402,7 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: 12),
                 Container(
-                  width: 40,
-                  height: 4,
+                  width: 40, height: 4,
                   decoration: BoxDecoration(
                     color: Colors.white24,
                     borderRadius: BorderRadius.circular(2),
@@ -395,19 +427,18 @@ class SettingsScreen extends ConsumerWidget {
                               content: TextField(
                                 controller: ctrl,
                                 autofocus: true,
+                                textCapitalization: TextCapitalization.words,
                                 decoration: const InputDecoration(
                                     hintText: 'Person name'),
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(c),
-                                  child: const Text('Cancel'),
-                                ),
+                                    onPressed: () => Navigator.pop(c),
+                                    child: const Text('Cancel')),
                                 ElevatedButton(
                                   onPressed: () {
                                     if (ctrl.text.trim().isNotEmpty) {
-                                      ref
-                                          .read(personProvider.notifier)
+                                      ref.read(personProvider.notifier)
                                           .add(ctrl.text.trim());
                                       Navigator.pop(c);
                                     }
@@ -466,16 +497,13 @@ class SettingsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('⚠️ Delete All Data?'),
         content: const Text(
-            'This will permanently delete ALL your transactions, loans, and savings goals. This action cannot be undone.\n\nPlease export a backup first if needed.'),
+            'This will permanently delete ALL your transactions, loans, and savings goals.\n\nThis action CANNOT be undone.\n\nPlease export a backup first!'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              await LocalDatabase.init(); // Ensure boxes are open
-              // Clear all boxes
               final transactions = LocalDatabase.getAllTransactions();
               for (final t in transactions) {
                 await LocalDatabase.deleteTransaction(t.id);
@@ -534,7 +562,8 @@ class _SettingsTile extends StatelessWidget {
             backgroundColor: color.withOpacity(0.15),
             child: Icon(icon, color: color, size: 20),
           ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+          title:
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
           subtitle: Text(subtitle,
               style: const TextStyle(fontSize: 11, color: Colors.white38)),
           trailing:
@@ -546,3 +575,36 @@ class _SettingsTile extends StatelessWidget {
   }
 }
 
+class _DataRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String count;
+  final Color color;
+
+  const _DataRow(this.icon, this.label, this.count, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(fontSize: 14)),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(count,
+                style: TextStyle(
+                    color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+  }
+}

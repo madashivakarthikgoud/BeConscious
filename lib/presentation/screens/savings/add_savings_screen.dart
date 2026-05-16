@@ -21,6 +21,7 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
   final _targetCtrl = TextEditingController();
   DateTime _deadline = DateTime.now().add(const Duration(days: 90));
   int _selectedColorIndex = 0;
+  bool _isSaving = false;
 
   final _colors = [
     0xFF4CAF50, 0xFF2196F3, 0xFF9C27B0, 0xFFFF9800,
@@ -181,7 +182,9 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
       );
 
   void _save() {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
 
     final goal = SavingsGoalModel(
       id: _isEditing ? widget.editGoal!.id : const Uuid().v4(),
@@ -198,10 +201,10 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
       ref.read(savingsProvider.notifier).add(goal);
     }
 
+    final msg = _isEditing ? 'Goal updated!' : 'Goal created!';
+    final messenger = ScaffoldMessenger.of(context);
     context.pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isEditing ? 'Goal updated!' : 'Goal created!')),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(msg)));
   }
 }
 

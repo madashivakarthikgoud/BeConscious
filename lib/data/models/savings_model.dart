@@ -59,7 +59,10 @@ class SavingsGoalModel {
   double get progressPercent =>
       targetAmount > 0 ? (totalSaved / targetAmount).clamp(0.0, 1.0) : 0.0;
 
-  double get remainingAmount => (targetAmount - totalSaved).clamp(0, double.infinity);
+  double get remainingAmount {
+    final remaining = targetAmount - totalSaved;
+    return remaining < 0 ? 0.0 : remaining;
+  }
 
   int get daysRemaining {
     final diff = deadline.difference(DateTime.now()).inDays;

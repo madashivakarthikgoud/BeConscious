@@ -56,10 +56,16 @@ class LocalDatabase {
   }
 
   static List<TransactionModel> getAllTransactions() {
-    return _txnBox.values.map((e) {
-      return TransactionModel.fromJson(jsonDecode(e as String));
-    }).toList()
-      ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+    final results = <TransactionModel>[];
+    for (final e in _txnBox.values) {
+      try {
+        results.add(TransactionModel.fromJson(jsonDecode(e as String)));
+      } catch (_) {
+        // Skip corrupted entries silently
+      }
+    }
+    results.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+    return results;
   }
 
   static List<TransactionModel> getTransactionsByDateRange(
@@ -84,10 +90,16 @@ class LocalDatabase {
   }
 
   static List<LoanModel> getAllLoans() {
-    return _loanBox.values.map((e) {
-      return LoanModel.fromJson(jsonDecode(e as String));
-    }).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final results = <LoanModel>[];
+    for (final e in _loanBox.values) {
+      try {
+        results.add(LoanModel.fromJson(jsonDecode(e as String)));
+      } catch (_) {
+        // Skip corrupted entries silently
+      }
+    }
+    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return results;
   }
 
   // ==================== SAVINGS ====================
@@ -103,10 +115,16 @@ class LocalDatabase {
   }
 
   static List<SavingsGoalModel> getAllSavingsGoals() {
-    return _savBox.values.map((e) {
-      return SavingsGoalModel.fromJson(jsonDecode(e as String));
-    }).toList()
-      ..sort((a, b) => a.deadline.compareTo(b.deadline));
+    final results = <SavingsGoalModel>[];
+    for (final e in _savBox.values) {
+      try {
+        results.add(SavingsGoalModel.fromJson(jsonDecode(e as String)));
+      } catch (_) {
+        // Skip corrupted entries silently
+      }
+    }
+    results.sort((a, b) => a.deadline.compareTo(b.deadline));
+    return results;
   }
 
   // ==================== TAGS ====================
@@ -123,11 +141,12 @@ class LocalDatabase {
   }
 
   static Future<void> removeTag(String tag) async {
-    final key = _tagBox.keys.firstWhere(
-      (k) => _tagBox.get(k) == tag,
-      orElse: () => null,
-    );
-    if (key != null) await _tagBox.delete(key);
+    for (final key in _tagBox.keys) {
+      if (_tagBox.get(key) == tag) {
+        await _tagBox.delete(key);
+        return;
+      }
+    }
   }
 
   // ==================== PERSONS ====================
@@ -144,11 +163,12 @@ class LocalDatabase {
   }
 
   static Future<void> removePerson(String person) async {
-    final key = _personBox.keys.firstWhere(
-      (k) => _personBox.get(k) == person,
-      orElse: () => null,
-    );
-    if (key != null) await _personBox.delete(key);
+    for (final key in _personBox.keys) {
+      if (_personBox.get(key) == person) {
+        await _personBox.delete(key);
+        return;
+      }
+    }
   }
 
   // ==================== SETTINGS ====================

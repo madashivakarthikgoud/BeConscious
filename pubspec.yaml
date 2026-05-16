@@ -24,27 +24,14 @@ dependencies:
   # Navigation
   go_router: ^14.2.0
 
-  # Local Storage (always active - offline first)
+  # Local Storage
   hive_flutter: ^1.1.0
   path_provider: ^2.1.4
 
   # Utilities
   uuid: ^4.4.2
-  connectivity_plus: ^6.0.5
   share_plus: ^9.0.0
-  csv: ^6.0.0
-
-  # ============================================================
-  # FIREBASE & AUTH — Uncomment AFTER Firebase setup (see SETUP.md)
-  # ============================================================
-  # firebase_core: ^3.3.0
-  # firebase_auth: ^5.1.4
-  # cloud_firestore: ^5.2.1
-  # google_sign_in: ^6.2.1
-
-  # SECURITY — Uncomment when needed
-  # local_auth: ^2.2.0
-  # flutter_secure_storage: ^9.2.2
+  file_picker: ^8.0.6
 
 dev_dependencies:
   flutter_test:

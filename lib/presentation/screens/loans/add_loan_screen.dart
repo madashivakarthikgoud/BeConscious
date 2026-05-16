@@ -28,6 +28,7 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
   InterestPeriod _interestPeriod = InterestPeriod.yearly;
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
+  bool _isSaving = false;
 
   bool get _isEditing => widget.editLoan != null;
 
@@ -113,7 +114,7 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
                     ? 'Who did you borrow from?'
                     : 'Who did you lend to?',
               ),
-              validator: (v) => v == null || v.isEmpty ? 'Enter name' : null,
+              validator: (v) => v == null || v.trim().isEmpty ? 'Enter name' : null,
             ),
             const SizedBox(height: 16),
 
@@ -289,7 +290,9 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
       );
 
   void _save() {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
 
     final loan = LoanModel(
       id: _isEditing ? widget.editLoan!.id : const Uuid().v4(),
@@ -314,10 +317,10 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
       ref.read(loanProvider.notifier).add(loan);
     }
 
+    final msg = _isEditing ? 'Loan updated!' : 'Loan saved!';
+    final messenger = ScaffoldMessenger.of(context);
     context.pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isEditing ? 'Loan updated!' : 'Loan saved!')),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(msg)));
   }
 }
 

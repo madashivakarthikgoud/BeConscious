@@ -29,6 +29,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   List<String> _selectedTags = [];
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
+  bool _isSaving = false;
 
   bool get _isEditing => widget.editTransaction != null;
 
@@ -151,7 +152,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(hintText: 'What was this for?'),
               validator: (v) =>
-                  v == null || v.isEmpty ? 'Enter description' : null,
+                  v == null || v.trim().isEmpty ? 'Enter description' : null,
             ),
             const SizedBox(height: 20),
 
@@ -351,7 +352,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   void _save() {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
 
     final dateTime = DateTime(
       _selectedDate.year,
@@ -380,12 +383,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ref.read(transactionProvider.notifier).add(txn);
     }
 
+    final msg = _isEditing ? 'Transaction updated!' : 'Transaction saved!';
+    final messenger = ScaffoldMessenger.of(context);
     context.pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_isEditing ? 'Transaction updated!' : 'Transaction saved!'),
-      ),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void _addNewTag(BuildContext context, WidgetRef ref) {

@@ -270,8 +270,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     return PieChartSectionData(
                                       color: colors[e.key % colors.length],
                                       value: e.value.value,
-                                      title:
-                                          '${(e.value.value / expense * 100).toInt()}%',
+                                      title: expense > 0
+                                          ? '${(e.value.value / expense * 100).toInt()}%'
+                                          : '0%',
                                       radius: 45,
                                       titleStyle: const TextStyle(
                                         fontSize: 11,

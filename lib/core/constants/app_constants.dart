@@ -14,14 +14,19 @@ class AppConstants {
   }
 
   static String formatCurrencyShort(double amount) {
-    if (amount >= 10000000) {
-      return '${currency}${(amount / 10000000).toStringAsFixed(2)}Cr';
-    } else if (amount >= 100000) {
-      return '${currency}${(amount / 100000).toStringAsFixed(2)}L';
-    } else if (amount >= 1000) {
-      return '${currency}${(amount / 1000).toStringAsFixed(1)}K';
+    final isNegative = amount < 0;
+    final abs = amount.abs();
+    String result;
+    if (abs >= 10000000) {
+      result = '$currency${(abs / 10000000).toStringAsFixed(2)}Cr';
+    } else if (abs >= 100000) {
+      result = '$currency${(abs / 100000).toStringAsFixed(2)}L';
+    } else if (abs >= 1000) {
+      result = '$currency${(abs / 1000).toStringAsFixed(1)}K';
+    } else {
+      return formatCurrency(amount);
     }
-    return formatCurrency(amount);
+    return isNegative ? '-$result' : result;
   }
 
   static String formatDate(DateTime date) {
