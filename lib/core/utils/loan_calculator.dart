@@ -11,6 +11,7 @@ class LoanCalculator {
     required double annualRate,
     required int days,
   }) {
+    if (principal <= 0 || annualRate <= 0 || days <= 0) return 0.0;
     final rate = annualRate / 100.0;
     final timeYears = days / 365.0;
     return double.parse((principal * rate * timeYears).toStringAsFixed(2));
@@ -24,17 +25,49 @@ class LoanCalculator {
     required int days,
     required int compoundingFrequency,
   }) {
+    if (annualRate <= 0 || days <= 0 || principal <= 0) return 0.0;
     final rate = annualRate / 100.0;
     final n = compoundingFrequency;
     final timeYears = days / 365.0;
-    final periods = (n * timeYears).round();
+    final exponent = n * timeYears;
+    final base = 1 + rate / n;
 
-    double amount = principal;
-    final factor = 1 + rate / n;
-    for (int i = 0; i < periods; i++) {
-      amount *= factor;
+    // Precise calculation using iterative approach
+    final intPart = exponent.truncate();
+    final fracPart = exponent - intPart;
+    double factor = 1.0;
+    for (int i = 0; i < intPart; i++) {
+      factor *= base;
     }
+    if (fracPart > 0.0001) {
+      // base^frac approximation via exp(frac*ln(base))
+      final lnBase = _lnApprox(base);
+      factor *= _expApprox(fracPart * lnBase);
+    }
+
+    final amount = principal * factor;
     return double.parse((amount - principal).toStringAsFixed(2));
+  }
+
+  static double _lnApprox(double x) {
+    if (x <= 0) return 0;
+    final z = (x - 1) / (x + 1);
+    double sum = 0, term = z;
+    for (int i = 1; i <= 50; i += 2) {
+      sum += term / i;
+      term *= z * z;
+    }
+    return 2 * sum;
+  }
+
+  static double _expApprox(double x) {
+    double sum = 1.0, term = 1.0;
+    for (int i = 1; i <= 30; i++) {
+      term *= x / i;
+      sum += term;
+      if (term.abs() < 1e-15) break;
+    }
+    return sum;
   }
 
   /// Get full loan status summary
@@ -56,11 +89,13 @@ class LoanCalculator {
     required double annualRate,
     required int months,
   }) {
+    if (principal <= 0) return 0.0;
     if (months <= 0) return principal;
-    if (annualRate <= 0) return principal / months;
+    if (annualRate <= 0) return double.parse((principal / months).toStringAsFixed(2));
 
     final monthlyRate = annualRate / 12 / 100;
     final factor = _pow(1 + monthlyRate, months);
+    if (factor <= 1) return double.parse((principal / months).toStringAsFixed(2));
     final emi = principal * monthlyRate * factor / (factor - 1);
     return double.parse(emi.toStringAsFixed(2));
   }

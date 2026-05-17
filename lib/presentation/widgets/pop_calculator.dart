@@ -27,6 +27,9 @@ class _PopCalculatorState extends State<PopCalculator> {
 
   void _onDigit(String d) {
     setState(() {
+      if (_display == 'Error') {
+        _onClear();
+      }
       if (_newNumber) {
         _display = d;
         _newNumber = false;
@@ -73,7 +76,7 @@ class _PopCalculatorState extends State<PopCalculator> {
       case '+': return a + b;
       case '−': return a - b;
       case '×': return a * b;
-      case '÷': return b != 0 ? a / b : 0;
+      case '÷': return b != 0 ? a / b : double.nan;
       default: return b;
     }
   }
@@ -117,7 +120,9 @@ class _PopCalculatorState extends State<PopCalculator> {
   }
 
   String _formatNum(double n) {
-    if (n == n.roundToDouble()) return n.toInt().toString();
+    if (n.isNaN) return 'Error';
+    if (n.isInfinite) return 'Error';
+    if (n == n.roundToDouble() && n.abs() < 1e15) return n.toInt().toString();
     return n.toStringAsFixed(6).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
   }
 

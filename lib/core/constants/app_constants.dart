@@ -5,6 +5,7 @@ class AppConstants {
   static const String currency = '₹';
 
   static String formatCurrency(double amount) {
+    if (amount.isNaN || amount.isInfinite) return '${currency}0.00';
     final formatter = NumberFormat.currency(
       locale: 'en_IN',
       symbol: currency,
@@ -14,6 +15,7 @@ class AppConstants {
   }
 
   static String formatCurrencyShort(double amount) {
+    if (amount.isNaN || amount.isInfinite) return '${currency}0';
     final isNegative = amount < 0;
     final abs = amount.abs();
     String result;

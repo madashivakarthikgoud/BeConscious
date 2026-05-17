@@ -70,13 +70,15 @@ class SavingsGoalModel {
   }
 
   double get requiredPerDay {
-    if (daysRemaining <= 0) return remainingAmount;
+    if (remainingAmount <= 0) return 0.0;
+    if (daysRemaining <= 0) return 0.0; // Overdue — no meaningful daily target
     return double.parse((remainingAmount / daysRemaining).toStringAsFixed(2));
   }
 
   double get requiredPerMonth {
+    if (remainingAmount <= 0) return 0.0;
     final months = daysRemaining / 30.0;
-    if (months <= 0) return remainingAmount;
+    if (months <= 0) return 0.0; // Overdue
     return double.parse((remainingAmount / months).toStringAsFixed(2));
   }
 
