@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
 /// Frosted glass card — Template B / C base component
+/// Uses lightweight implementation without BackdropFilter for list performance
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
@@ -10,6 +11,7 @@ class GlassCard extends StatelessWidget {
   final double? borderRadius;
   final Color? borderColor;
   final double? opacity;
+  final bool useBlur;
 
   const GlassCard({
     super.key,
@@ -19,12 +21,13 @@ class GlassCard extends StatelessWidget {
     this.borderRadius,
     this.borderColor,
     this.opacity,
+    this.useBlur = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final r = borderRadius ?? AppTheme.cornerRadius;
-    return Container(
+    final content = Container(
       margin: margin ?? EdgeInsets.zero,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(r),
@@ -36,18 +39,24 @@ class GlassCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: AppTheme.glassBlur,
-            sigmaY: AppTheme.glassBlur,
-          ),
-          child: Padding(
-            padding: padding ?? const EdgeInsets.all(20),
-            child: child,
-          ),
-        ),
+        child: useBlur
+            ? BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: AppTheme.glassBlur,
+                  sigmaY: AppTheme.glassBlur,
+                ),
+                child: Padding(
+                  padding: padding ?? const EdgeInsets.all(20),
+                  child: child,
+                ),
+              )
+            : Padding(
+                padding: padding ?? const EdgeInsets.all(20),
+                child: child,
+              ),
       ),
     );
+    return content;
   }
 }
 
@@ -143,9 +152,11 @@ class AppBackground extends StatelessWidget {
           end: Alignment.bottomCenter,
         ),
       ),
-      child: CustomPaint(
-        painter: _GridPainter(),
-        child: child,
+      child: RepaintBoundary(
+        child: CustomPaint(
+          painter: _GridPainter(),
+          child: child,
+        ),
       ),
     );
   }

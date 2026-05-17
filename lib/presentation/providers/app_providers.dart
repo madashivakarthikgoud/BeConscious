@@ -64,7 +64,9 @@ class LoanNotifier extends StateNotifier<List<LoanModel>> {
   }
 
   Future<void> addPayment(String loanId, LoanPayment payment) async {
-    final loan = state.firstWhere((l) => l.id == loanId);
+    final idx = state.indexWhere((l) => l.id == loanId);
+    if (idx == -1) return;
+    final loan = state[idx];
     final updated = loan.copyWith(
       payments: [...loan.payments, payment],
       status: (loan.totalPaid + payment.amount) >= (loan.principalAmount + loan.currentInterest)
@@ -107,7 +109,9 @@ class SavingsNotifier extends StateNotifier<List<SavingsGoalModel>> {
 
   Future<void> addContribution(
       String goalId, SavingsContribution contribution) async {
-    final goal = state.firstWhere((g) => g.id == goalId);
+    final idx = state.indexWhere((g) => g.id == goalId);
+    if (idx == -1) return;
+    final goal = state[idx];
     final updated = goal.copyWith(
       contributions: [...goal.contributions, contribution],
     );
@@ -332,7 +336,9 @@ class MindSpaceNotifier extends StateNotifier<List<MindSpaceItem>> {
   }
 
   Future<void> toggleComplete(String id) async {
-    final item = state.firstWhere((i) => i.id == id);
+    final idx = state.indexWhere((i) => i.id == id);
+    if (idx == -1) return;
+    final item = state[idx];
     if (item.status == MindItemStatus.completed) {
       // If already completed, tapping deletes it
       await delete(id);

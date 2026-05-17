@@ -38,7 +38,8 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
       _nameCtrl.text = g.name;
       _targetCtrl.text = g.targetAmount.toStringAsFixed(2);
       _deadline = g.deadline;
-      _selectedColorIndex = _colors.indexOf(g.colorValue).clamp(0, _colors.length - 1);
+      final colorIdx = _colors.indexOf(g.colorValue);
+      _selectedColorIndex = colorIdx >= 0 ? colorIdx : 0;
     }
   }
 
@@ -72,7 +73,7 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
               textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
                   hintText: 'e.g. Emergency Fund, Vacation'),
-              validator: (v) => v == null || v.isEmpty ? 'Enter name' : null,
+              validator: (v) => v == null || v.trim().isEmpty ? 'Enter name' : null,
             ),
             const SizedBox(height: 20),
 

@@ -20,6 +20,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   String _filterType = 'All';
   String _filterPerson = 'All';
   String _searchQuery = '';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +95,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               child: TextField(
+                controller: _searchController,
                 onChanged: (v) => setState(() => _searchQuery = v),
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
