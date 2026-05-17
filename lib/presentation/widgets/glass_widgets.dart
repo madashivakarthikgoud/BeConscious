@@ -225,17 +225,20 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-/// Interactive tap scale widget — makes any widget feel alive on press
+/// Interactive touch widget — Avatar-inspired bioluminescent glow on press
+/// Subtle scale (0.985) + soft glow bloom that flows through the border
 class TapScale extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
   final double scaleDown;
+  final Color? glowColor;
 
   const TapScale({
     super.key,
     required this.child,
     this.onTap,
-    this.scaleDown = 0.96,
+    this.scaleDown = 0.985,
+    this.glowColor,
   });
 
   @override
@@ -245,19 +248,17 @@ class TapScale extends StatefulWidget {
 class _TapScaleState extends State<TapScale>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double> _scaleAnim;
+  late Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
-      reverseDuration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 150),
+      reverseDuration: const Duration(milliseconds: 400),
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: widget.scaleDown).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut, reverseCurve: Curves.easeInOut);
   }
 
   @override
@@ -268,6 +269,7 @@ class _TapScaleState extends State<TapScale>
 
   @override
   Widget build(BuildContext context) {
+    final glow = widget.glowColor ?? AppTheme.accent1;
     return GestureDetector(
       onTapDown: (_) => _ctrl.forward(),
       onTapUp: (_) {
@@ -277,11 +279,28 @@ class _TapScaleState extends State<TapScale>
       },
       onTapCancel: () => _ctrl.reverse(),
       child: AnimatedBuilder(
-        animation: _scaleAnim,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnim.value,
-          child: child,
-        ),
+        animation: _anim,
+        builder: (context, child) {
+          final t = _anim.value;
+          return Transform.scale(
+            scale: 1.0 - (1.0 - widget.scaleDown) * t,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
+                boxShadow: t > 0
+                    ? [
+                        BoxShadow(
+                          color: glow.withOpacity(0.15 * t),
+                          blurRadius: 12 * t,
+                          spreadRadius: 1 * t,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: child!,
+            ),
+          );
+        },
         child: widget.child,
       ),
     );

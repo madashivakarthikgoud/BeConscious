@@ -235,7 +235,7 @@ class _QuickAction extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
             color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
             border: Border.all(color: color.withOpacity(0.15)),
           ),
           child: Column(
