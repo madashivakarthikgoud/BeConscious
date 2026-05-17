@@ -141,7 +141,7 @@ class ShellScreen extends StatelessWidget {
         height: 36,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             colors: [AppTheme.accent1, AppTheme.accent1.withOpacity(0.7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,

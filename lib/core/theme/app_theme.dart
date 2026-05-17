@@ -147,7 +147,7 @@ class AppTheme {
         ),
         iconTheme: const IconThemeData(color: Colors.white70),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white.withOpacity(glassOpacity),
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -220,7 +220,7 @@ class AppTheme {
         ),
         labelStyle: GoogleFonts.plusJakartaSans(fontSize: 13),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: const Color(0xFF152A1C),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cornerRadius),
