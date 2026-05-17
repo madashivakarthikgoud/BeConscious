@@ -1,0 +1,215 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
+
+/// Frosted glass card — Template B / C base component
+class GlassCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets? padding;
+  final EdgeInsets? margin;
+  final double? borderRadius;
+  final Color? borderColor;
+  final double? opacity;
+
+  const GlassCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.borderRadius,
+    this.borderColor,
+    this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final r = borderRadius ?? AppTheme.cornerRadius;
+    return Container(
+      margin: margin ?? EdgeInsets.zero,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(r),
+        border: Border.all(
+          color: borderColor ?? Colors.white.withOpacity(AppTheme.glassBorderOpacity),
+          width: 1,
+        ),
+        color: Colors.white.withOpacity(opacity ?? AppTheme.glassOpacity),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: AppTheme.glassBlur,
+            sigmaY: AppTheme.glassBlur,
+          ),
+          child: Padding(
+            padding: padding ?? const EdgeInsets.all(20),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Template A: Solid accent hero card
+class HeroAccentCard extends StatelessWidget {
+  final Color color;
+  final Widget child;
+  final EdgeInsets? padding;
+  final EdgeInsets? margin;
+  final VoidCallback? onTap;
+
+  const HeroAccentCard({
+    super.key,
+    required this.color,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: margin ?? EdgeInsets.zero,
+        padding: padding ?? const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(AppTheme.cornerRadius),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.25),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Template D: Split promo banner with gradient
+class GradientBanner extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets? padding;
+  final EdgeInsets? margin;
+  final VoidCallback? onTap;
+
+  const GradientBanner({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: margin ?? EdgeInsets.zero,
+        padding: padding ?? const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTheme.cornerRadius),
+          gradient: const LinearGradient(
+            colors: [AppTheme.accent1, AppTheme.accent2],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Dark background with subtle grid pattern
+class AppBackground extends StatelessWidget {
+  final Widget child;
+  const AppBackground({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.backgroundDark, AppTheme.backgroundDark2],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: CustomPaint(
+        painter: _GridPainter(),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.02)
+      ..strokeWidth = 0.5;
+    const step = 40.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Section header with optional action
+class SectionHeader extends StatelessWidget {
+  final String title;
+  final String? actionText;
+  final VoidCallback? onAction;
+
+  const SectionHeader({
+    super.key,
+    required this.title,
+    this.actionText,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        if (actionText != null)
+          GestureDetector(
+            onTap: onAction,
+            child: Text(
+              actionText!,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.accent1,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+

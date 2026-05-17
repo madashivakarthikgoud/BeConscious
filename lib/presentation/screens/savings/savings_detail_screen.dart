@@ -95,12 +95,12 @@ class SavingsDetailScreen extends ConsumerWidget {
                           style: TextStyle(
                             color: color,
                             fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                         const Text('saved',
                             style:
-                                TextStyle(color: Colors.white38, fontSize: 12)),
+                                TextStyle(color: AppTheme.textMuted, fontSize: 12)),
                       ],
                     ),
                     progressColor: color,
@@ -114,14 +114,14 @@ class SavingsDetailScreen extends ConsumerWidget {
                     AppConstants.formatCurrency(goal.totalSaved),
                     style: TextStyle(
                       fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: color,
                     ),
                   ),
                   Text(
                     'of ${AppConstants.formatCurrency(goal.targetAmount)}',
                     style:
-                        const TextStyle(color: Colors.white54, fontSize: 14),
+                        const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
@@ -173,7 +173,7 @@ class SavingsDetailScreen extends ConsumerWidget {
                 child: const Icon(Icons.event_rounded, size: 20),
               ),
               title: const Text('Deadline',
-                  style: TextStyle(fontSize: 13, color: Colors.white54)),
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
               trailing: Text(
                 AppConstants.formatDate(goal.deadline),
                 style:
@@ -188,7 +188,7 @@ class SavingsDetailScreen extends ConsumerWidget {
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
+                  ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
 
           if (goal.contributions.isEmpty)
@@ -199,10 +199,10 @@ class SavingsDetailScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       Icon(Icons.savings_rounded,
-                          size: 48, color: Colors.white12),
+                          size: 48, color: Colors.white.withOpacity(0.06)),
                       const SizedBox(height: 12),
                       const Text('No contributions yet',
-                          style: TextStyle(color: Colors.white38)),
+                          style: TextStyle(color: AppTheme.textMuted)),
                     ],
                   ),
                 ),
@@ -219,17 +219,17 @@ class SavingsDetailScreen extends ConsumerWidget {
                     title: Text(
                       AppConstants.formatCurrency(c.amount),
                       style: TextStyle(
-                          fontWeight: FontWeight.bold, color: color),
+                          fontWeight: FontWeight.w800, color: color),
                     ),
                     subtitle: Text(
                       AppConstants.formatDate(c.date),
                       style: const TextStyle(
-                          fontSize: 12, color: Colors.white38),
+                          fontSize: 12, color: AppTheme.textMuted),
                     ),
                     trailing: c.notes != null
                         ? Text(c.notes!,
                             style: const TextStyle(
-                                fontSize: 11, color: Colors.white24))
+                                fontSize: 11, color: AppTheme.textMuted))
                         : null,
                   ),
                 )),
@@ -248,7 +248,7 @@ class SavingsDetailScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surfaceDark,
+      backgroundColor: const Color(0xFF152A1C),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -264,7 +264,7 @@ class SavingsDetailScreen extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppTheme.textMuted,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -274,11 +274,11 @@ class SavingsDetailScreen extends ConsumerWidget {
                 style: Theme.of(ctx)
                     .textTheme
                     .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+                    ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
             Text(
               'Remaining: ${AppConstants.formatCurrency(goal.remainingAmount)}',
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 20),
             TextField(
@@ -289,11 +289,11 @@ class SavingsDetailScreen extends ConsumerWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
               autofocus: true,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
               decoration: const InputDecoration(
                 prefixText: '₹ ',
                 prefixStyle:
-                    TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                 hintText: '0.00',
               ),
             ),
@@ -381,10 +381,10 @@ class _Stat extends StatelessWidget {
                   children: [
                     Text(label,
                         style: const TextStyle(
-                            fontSize: 11, color: Colors.white38)),
+                            fontSize: 11, color: AppTheme.textMuted)),
                     Text(value,
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
                           fontSize: 14,
                           color: color,
                         ),

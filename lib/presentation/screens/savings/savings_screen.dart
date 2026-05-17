@@ -29,7 +29,7 @@ class SavingsScreen extends ConsumerWidget {
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                        ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const Spacer(),
                   IconButton(
@@ -71,14 +71,14 @@ class SavingsScreen extends ConsumerWidget {
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '${goals.length} active goals',
                             style: const TextStyle(
-                                color: Colors.white60, fontSize: 12),
+                                color: AppTheme.textSecondary, fontSize: 12),
                           ),
                         ],
                       ),
@@ -103,10 +103,10 @@ class SavingsScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.savings_rounded,
-                        size: 80, color: Colors.white12),
+                        size: 80, color: Colors.white.withOpacity(0.06)),
                     const SizedBox(height: 16),
                     Text('No savings goals yet',
-                        style: TextStyle(color: Colors.white38)),
+                        style: TextStyle(color: AppTheme.textMuted)),
                     const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: () => context.push('/add-savings'),
@@ -162,7 +162,7 @@ class _GoalCard extends StatelessWidget {
                     style: TextStyle(
                       color: color,
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   progressColor: color,
@@ -188,28 +188,28 @@ class _GoalCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(Icons.timer_outlined,
-                              size: 12, color: Colors.white38),
+                              size: 12, color: AppTheme.textMuted),
                           const SizedBox(width: 4),
                           Text(
                             '${goal.daysRemaining} days left',
                             style: const TextStyle(
-                                fontSize: 11, color: Colors.white38),
+                                fontSize: 11, color: AppTheme.textMuted),
                           ),
                           const SizedBox(width: 12),
                           Icon(Icons.trending_up_rounded,
-                              size: 12, color: Colors.white38),
+                              size: 12, color: AppTheme.textMuted),
                           const SizedBox(width: 4),
                           Text(
                             '${AppConstants.formatCurrency(goal.requiredPerDay)}/day',
                             style: const TextStyle(
-                                fontSize: 11, color: Colors.white38),
+                                fontSize: 11, color: AppTheme.textMuted),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: Colors.white24),
+                Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
               ],
             ),
           ),

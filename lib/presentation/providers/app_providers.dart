@@ -3,6 +3,7 @@ import '../../data/datasources/local/local_database.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/models/loan_model.dart';
 import '../../data/models/savings_model.dart';
+import '../../data/models/mind_space_model.dart';
 
 // ==================== TRANSACTIONS ====================
 
@@ -181,6 +182,23 @@ final isDarkModeProvider = StateProvider<bool>((ref) {
   return LocalDatabase.getSetting('darkMode', defaultValue: true) as bool;
 });
 
+// ==================== USER NAME ====================
+
+final userNameProvider = StateNotifierProvider<UserNameNotifier, String>(
+  (ref) => UserNameNotifier(),
+);
+
+class UserNameNotifier extends StateNotifier<String> {
+  UserNameNotifier() : super('') {
+    state = (LocalDatabase.getSetting('userName', defaultValue: 'User') as String?) ?? 'User';
+  }
+
+  Future<void> setName(String name) async {
+    await LocalDatabase.setSetting('userName', name);
+    state = name;
+  }
+}
+
 // ==================== DERIVED / COMPUTED ====================
 
 final todayTransactionsProvider = Provider<List<TransactionModel>>((ref) {
@@ -287,3 +305,56 @@ final totalSavedProvider = Provider<double>((ref) {
       .fold(0.0, (sum, g) => sum + g.totalSaved);
 });
 
+// ==================== MIND SPACE ====================
+
+class MindSpaceNotifier extends StateNotifier<List<MindSpaceItem>> {
+  MindSpaceNotifier() : super([]) {
+    loadAll();
+  }
+
+  void loadAll() {
+    state = LocalDatabase.getAllMindItems();
+  }
+
+  Future<void> add(MindSpaceItem item) async {
+    await LocalDatabase.saveMindItem(item);
+    loadAll();
+  }
+
+  Future<void> update(MindSpaceItem item) async {
+    await LocalDatabase.saveMindItem(item);
+    loadAll();
+  }
+
+  Future<void> delete(String id) async {
+    await LocalDatabase.deleteMindItem(id);
+    loadAll();
+  }
+
+  Future<void> toggleComplete(String id) async {
+    final item = state.firstWhere((i) => i.id == id);
+    if (item.status == MindItemStatus.completed) {
+      // If already completed, tapping deletes it
+      await delete(id);
+    } else {
+      await update(item.copyWith(status: MindItemStatus.completed));
+    }
+  }
+}
+
+final mindSpaceProvider =
+    StateNotifierProvider<MindSpaceNotifier, List<MindSpaceItem>>(
+  (ref) => MindSpaceNotifier(),
+);
+
+final pendingMindItemsProvider = Provider<List<MindSpaceItem>>((ref) {
+  return ref.watch(mindSpaceProvider)
+      .where((i) => i.status == MindItemStatus.pending)
+      .toList();
+});
+
+final completedMindItemsProvider = Provider<List<MindSpaceItem>>((ref) {
+  return ref.watch(mindSpaceProvider)
+      .where((i) => i.status == MindItemStatus.completed)
+      .toList();
+});

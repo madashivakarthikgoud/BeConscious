@@ -79,8 +79,9 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
             // Type toggle
             Container(
               decoration: BoxDecoration(
-                color: AppTheme.cardDark,
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               child: Row(
                 children: [
@@ -192,12 +193,12 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
                         color: selected
-                            ? AppTheme.primaryColor.withOpacity(0.15)
-                            : AppTheme.cardDark,
+                            ? AppTheme.accent1.withOpacity(0.15)
+                            : Colors.white.withOpacity(0.06),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: selected
-                              ? AppTheme.primaryColor
+                              ? AppTheme.accent1
                               : Colors.white12,
                         ),
                       ),
@@ -206,7 +207,7 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
                           t == InterestType.simple ? 'Simple' : 'Compound',
                           style: TextStyle(
                             color: selected
-                                ? AppTheme.primaryColor
+                                ? AppTheme.accent1
                                 : Colors.white54,
                             fontWeight: FontWeight.w600,
                           ),
@@ -233,7 +234,7 @@ class _AddLoanScreenState extends ConsumerState<AddLoanScreen> {
                     onSelected: (v) {
                       if (v) setState(() => _interestPeriod = p);
                     },
-                    selectedColor: AppTheme.primaryColor.withOpacity(0.3),
+                    selectedColor: AppTheme.accent1.withOpacity(0.3),
                   );
                 }).toList(),
               ),
@@ -395,7 +396,7 @@ class _DatePicker extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppTheme.cardDark,
+          color: Colors.white.withOpacity(0.06),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white12),
         ),

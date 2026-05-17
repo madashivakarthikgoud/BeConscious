@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'data/datasources/local/local_database.dart';
+import 'presentation/widgets/glass_widgets.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,14 +13,13 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppTheme.surfaceDark,
+    systemNavigationBarColor: AppTheme.backgroundDark,
     systemNavigationBarIconBrightness: Brightness.light,
   ));
 
   try {
     await LocalDatabase.init();
   } catch (e) {
-    // If Hive is corrupted, delete and reinitialize
     debugPrint('Database error: $e. Reinitializing...');
     await Hive.deleteFromDisk();
     await LocalDatabase.init();
@@ -40,6 +40,9 @@ class BeConsciousApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
       routerConfig: appRouter,
+      builder: (context, child) {
+        return AppBackground(child: child ?? const SizedBox());
+      },
     );
   }
 }

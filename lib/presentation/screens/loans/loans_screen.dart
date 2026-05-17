@@ -5,6 +5,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/loan_model.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/glass_widgets.dart';
 
 class LoansScreen extends ConsumerStatefulWidget {
   const LoansScreen({super.key});
@@ -47,7 +48,7 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
                   style: Theme.of(context)
                       .textTheme
                       .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const Spacer(),
                 IconButton(
@@ -90,18 +91,19 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
-              color: AppTheme.cardDark,
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: TabBar(
               controller: _tabCtrl,
               indicator: BoxDecoration(
-                color: AppTheme.primaryColor,
-                borderRadius: BorderRadius.circular(12),
+                color: AppTheme.accent1,
+                borderRadius: BorderRadius.circular(16),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.white54,
+              unselectedLabelColor: AppTheme.textSecondary,
               dividerColor: Colors.transparent,
               tabs: [
                 Tab(text: 'Borrowed (${taken.length})'),
@@ -142,10 +144,9 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -153,7 +154,7 @@ class _SummaryCard extends StatelessWidget {
                   Icon(icon, color: color, size: 18),
                   const SizedBox(width: 6),
                   Text(label,
-                      style: TextStyle(color: Colors.white54, fontSize: 12)),
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -162,7 +163,7 @@ class _SummaryCard extends StatelessWidget {
                 style: TextStyle(
                   color: color,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
@@ -184,9 +185,9 @@ class _LoanList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.handshake_rounded, size: 64, color: Colors.white12),
+            Icon(Icons.handshake_rounded, size: 64, color: Colors.white.withOpacity(0.06)),
             const SizedBox(height: 16),
-            Text('No loans yet', style: TextStyle(color: Colors.white38)),
+            Text('No loans yet', style: TextStyle(color: AppTheme.textMuted)),
           ],
         ),
       );
@@ -221,7 +222,7 @@ class _LoanList extends StatelessWidget {
                             loan.personName[0].toUpperCase(),
                             style: TextStyle(
                                 color: color,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w800,
                                 fontSize: 18),
                           ),
                         ),
@@ -238,7 +239,7 @@ class _LoanList extends StatelessWidget {
                               Text(
                                 '${loan.interestRate}% ${loan.interestType == InterestType.simple ? "Simple" : "Compound"} • ${loan.interestPeriod.name}',
                                 style: const TextStyle(
-                                    fontSize: 11, color: Colors.white38),
+                                    fontSize: 11, color: AppTheme.textMuted),
                               ),
                             ],
                           ),
@@ -282,7 +283,7 @@ class _LoanList extends StatelessWidget {
                           value: (loan.totalPaid /
                                   (loan.principalAmount + loan.currentInterest))
                               .clamp(0.0, 1.0),
-                          backgroundColor: Colors.white12,
+                          backgroundColor: Colors.white.withOpacity(0.06),
                           color: color,
                           minHeight: 4,
                         ),
@@ -315,7 +316,7 @@ class _LoanStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.white38)),
+          Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.textMuted)),
           const SizedBox(height: 2),
           Text(
             value,

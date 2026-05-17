@@ -104,7 +104,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 style: Theme.of(context)
                     .textTheme
                     .headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
           ),
@@ -128,8 +128,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: _selectedPeriod == e.key
-                                    ? AppTheme.primaryColor
-                                    : AppTheme.cardDark,
+                                    ? AppTheme.accent1
+                                    : Colors.white.withOpacity(0.06),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Center(
@@ -139,8 +139,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: _selectedPeriod == e.key
-                                        ? Colors.white
-                                        : Colors.white54,
+                                        ? AppTheme.backgroundDark
+                                        : AppTheme.textSecondary,
                                   ),
                                 ),
                               ),
@@ -203,12 +203,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               children: [
                                 Text('Net ($periodLabel)',
                                     style: const TextStyle(
-                                        color: Colors.white54, fontSize: 12)),
+                                        color: AppTheme.textSecondary, fontSize: 12)),
                                 Text(
                                   AppConstants.formatCurrency(net),
                                   style: TextStyle(
                                     fontSize: 22,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w800,
                                     color: net >= 0
                                         ? AppTheme.incomeColor
                                         : AppTheme.expenseColor,
@@ -238,7 +238,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                            ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 16),
                     Card(
                       child: Padding(
@@ -258,7 +258,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       .entries
                                       .map((e) {
                                     final colors = [
-                                      AppTheme.primaryColor,
+                                      AppTheme.accent1,
                                       AppTheme.expenseColor,
                                       AppTheme.incomeColor,
                                       AppTheme.loanTakenColor,
@@ -276,7 +276,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       radius: 45,
                                       titleStyle: const TextStyle(
                                         fontSize: 11,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w800,
                                         color: Colors.white,
                                       ),
                                     );
@@ -288,7 +288,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             ...sortedTags.take(8).toList().asMap().entries.map(
                               (e) {
                                 final colors = [
-                                  AppTheme.primaryColor,
+                                  AppTheme.accent1,
                                   AppTheme.expenseColor,
                                   AppTheme.incomeColor,
                                   AppTheme.loanTakenColor,
@@ -350,7 +350,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                            ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 12),
                     ...sortedPersons.map((e) {
                       final pct = expense > 0 ? e.value / expense : 0.0;
@@ -372,7 +372,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     Text(
                                       AppConstants.formatCurrency(e.value),
                                       style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w800,
                                         color: AppTheme.expenseColor,
                                       ),
                                     ),
@@ -383,8 +383,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   borderRadius: BorderRadius.circular(4),
                                   child: LinearProgressIndicator(
                                     value: pct,
-                                    backgroundColor: Colors.white12,
-                                    color: AppTheme.primaryColor,
+                                    backgroundColor: Colors.white.withOpacity(0.06),
+                                    color: AppTheme.accent1,
                                     minHeight: 6,
                                   ),
                                 ),
@@ -392,7 +392,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 Text(
                                   '${(pct * 100).toInt()}% of total',
                                   style: const TextStyle(
-                                      fontSize: 11, color: Colors.white38),
+                                      fontSize: 11, color: AppTheme.textMuted),
                                 ),
                               ],
                             ),
@@ -417,7 +417,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                            ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 12),
                     Card(
                       child: Padding(
@@ -433,7 +433,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   barRods: [
                                     BarChartRodData(
                                       toY: dailyData[i + 1] ?? 0,
-                                      color: AppTheme.primaryColor,
+                                      color: AppTheme.accent1,
                                       width: 8,
                                       borderRadius:
                                           BorderRadius.circular(4),
@@ -461,7 +461,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                           '${value.toInt()}',
                                           style: const TextStyle(
                                               fontSize: 10,
-                                              color: Colors.white38),
+                                              color: AppTheme.textMuted),
                                         );
                                       }
                                       return const SizedBox();
@@ -492,7 +492,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+                          ?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 12),
                   Card(
                     child: Padding(
@@ -558,7 +558,7 @@ class _SummaryTile extends StatelessWidget {
                   Icon(icon, color: color, size: 18),
                   const SizedBox(width: 6),
                   Text(label,
-                      style: TextStyle(color: Colors.white54, fontSize: 12)),
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -567,7 +567,7 @@ class _SummaryTile extends StatelessWidget {
                 style: TextStyle(
                   color: color,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -591,7 +591,7 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+        Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         Text(
           value,
           style: TextStyle(

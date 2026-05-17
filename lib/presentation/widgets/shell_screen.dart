@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
+import 'pop_calculator.dart';
 
 class ShellScreen extends StatelessWidget {
   final Widget child;
@@ -11,6 +13,7 @@ class ShellScreen extends StatelessWidget {
     '/transactions',
     '/loans',
     '/savings',
+    '/mindspace',
     '/analytics',
   ];
 
@@ -27,52 +30,68 @@ class ShellScreen extends StatelessWidget {
     final idx = _currentIndex(context);
     return Scaffold(
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Colors.white.withOpacity(0.05),
-              width: 1,
+      extendBody: true,
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.backgroundDark.withOpacity(0.85),
+              border: Border(
+                top: BorderSide(color: Colors.white.withOpacity(0.06)),
+              ),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: idx,
+              onTap: (i) => context.go(_tabs[i]),
+              selectedFontSize: 10,
+              unselectedFontSize: 10,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_rounded),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.receipt_long_rounded),
+                  label: 'Txns',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.handshake_rounded),
+                  label: 'Loans',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.savings_rounded),
+                  label: 'Savings',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.psychology_rounded),
+                  label: 'Mind',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.analytics_rounded),
+                  label: 'Analytics',
+                ),
+              ],
             ),
           ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: idx,
-          onTap: (i) => context.go(_tabs[i]),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_rounded),
-              activeIcon: Icon(Icons.receipt_long_rounded),
-              label: 'Transactions',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.handshake_rounded),
-              activeIcon: Icon(Icons.handshake_rounded),
-              label: 'Loans',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.savings_rounded),
-              activeIcon: Icon(Icons.savings_rounded),
-              label: 'Savings',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.analytics_rounded),
-              activeIcon: Icon(Icons.analytics_rounded),
-              label: 'Analytics',
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.accent1.withOpacity(0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showQuickAddSheet(context);
-        },
-        child: const Icon(Icons.add_rounded, size: 28),
+        child: FloatingActionButton(
+          onPressed: () => _showQuickAddSheet(context),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          child: const Icon(Icons.add_rounded, size: 28),
+        ),
       ),
     );
   }
@@ -80,9 +99,9 @@ class ShellScreen extends StatelessWidget {
   void _showQuickAddSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surfaceDark,
+      backgroundColor: const Color(0xFF152A1C),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24),
@@ -90,10 +109,9 @@ class ShellScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
+              width: 40, height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -101,31 +119,29 @@ class ShellScreen extends StatelessWidget {
             Text(
               'Quick Add',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                   ),
             ),
             const SizedBox(height: 20),
             Row(
               children: [
                 _QuickAction(
-                  icon: Icons.remove_circle_outline,
+                  icon: Icons.north_east_rounded,
                   label: 'Expense',
                   color: AppTheme.expenseColor,
                   onTap: () {
                     Navigator.pop(ctx);
-                    context.push('/add-transaction',
-                        extra: {'type': 'expense'});
+                    context.push('/add-transaction', extra: {'type': 'expense'});
                   },
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 _QuickAction(
-                  icon: Icons.add_circle_outline,
+                  icon: Icons.south_west_rounded,
                   label: 'Income',
                   color: AppTheme.incomeColor,
                   onTap: () {
                     Navigator.pop(ctx);
-                    context.push('/add-transaction',
-                        extra: {'type': 'income'});
+                    context.push('/add-transaction', extra: {'type': 'income'});
                   },
                 ),
               ],
@@ -142,7 +158,7 @@ class ShellScreen extends StatelessWidget {
                     context.push('/add-loan');
                   },
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 _QuickAction(
                   icon: Icons.savings_rounded,
                   label: 'Savings',
@@ -150,6 +166,30 @@ class ShellScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(ctx);
                     context.push('/add-savings');
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _QuickAction(
+                  icon: Icons.psychology_rounded,
+                  label: 'Mind Note',
+                  color: AppTheme.accent2,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.go('/mindspace');
+                  },
+                ),
+                const SizedBox(width: 12),
+                _QuickAction(
+                  icon: Icons.calculate_rounded,
+                  label: 'Calculator',
+                  color: AppTheme.accent1,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    PopCalculator.show(context);
                   },
                 ),
               ],
@@ -178,25 +218,25 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: InkWell(
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3)),
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withOpacity(0.15)),
           ),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 32),
+              Icon(icon, color: color, size: 28),
               const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
                   color: color,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -206,4 +246,3 @@ class _QuickAction extends StatelessWidget {
     );
   }
 }
-

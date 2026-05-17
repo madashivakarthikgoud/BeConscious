@@ -111,6 +111,7 @@ class BackupService {
       'transactions': LocalDatabase.getAllTransactions().length,
       'loans': LocalDatabase.getAllLoans().length,
       'savings': LocalDatabase.getAllSavingsGoals().length,
+      'mindItems': LocalDatabase.getAllMindItems().length,
       'tags': LocalDatabase.getAllTags().length,
       'persons': LocalDatabase.getAllPersons().length,
     };

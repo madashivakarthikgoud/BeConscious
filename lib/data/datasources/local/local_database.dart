@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../models/transaction_model.dart';
 import '../../models/loan_model.dart';
 import '../../models/savings_model.dart';
+import '../../models/mind_space_model.dart';
 
 class LocalDatabase {
   static const String _transactionsBox = 'transactions';
@@ -11,6 +12,7 @@ class LocalDatabase {
   static const String _tagsBox = 'tags';
   static const String _personsBox = 'persons';
   static const String _settingsBox = 'settings';
+  static const String _mindSpaceBox = 'mindspace';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -20,6 +22,7 @@ class LocalDatabase {
     await Hive.openBox<String>(_tagsBox);
     await Hive.openBox<String>(_personsBox);
     await Hive.openBox(_settingsBox);
+    await Hive.openBox(_mindSpaceBox);
 
     // Initialize default tags
     final tagsBox = Hive.box<String>(_tagsBox);
@@ -225,5 +228,27 @@ class LocalDatabase {
       }
     }
   }
-}
 
+  // ==================== MIND SPACE ====================
+
+  static Box get _mindBox => Hive.box(_mindSpaceBox);
+
+  static Future<void> saveMindItem(MindSpaceItem item) async {
+    await _mindBox.put(item.id, jsonEncode(item.toJson()));
+  }
+
+  static Future<void> deleteMindItem(String id) async {
+    await _mindBox.delete(id);
+  }
+
+  static List<MindSpaceItem> getAllMindItems() {
+    final results = <MindSpaceItem>[];
+    for (final e in _mindBox.values) {
+      try {
+        results.add(MindSpaceItem.fromJson(jsonDecode(e as String)));
+      } catch (_) {}
+    }
+    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return results;
+  }
+}

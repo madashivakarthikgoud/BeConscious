@@ -117,9 +117,9 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppTheme.cardDark,
+                  color: Colors.white.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
                 ),
                 child: Row(
                   children: [

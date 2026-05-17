@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/glass_widgets.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final TransactionModel? editTransaction;
@@ -63,8 +64,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   Widget build(BuildContext context) {
     final tags = ref.watch(tagProvider);
     final persons = ref.watch(personProvider);
+    final typeColor = _type == TransactionType.expense
+        ? AppTheme.expenseColor
+        : AppTheme.incomeColor;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Transaction' : 'Add Transaction'),
         leading: IconButton(
@@ -79,59 +84,49 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           padding: const EdgeInsets.all(20),
           children: [
             // Type toggle
-            Container(
-              decoration: BoxDecoration(
-                color: AppTheme.cardDark,
-                borderRadius: BorderRadius.circular(12),
-              ),
+            GlassCard(
+              padding: const EdgeInsets.all(4),
+              borderRadius: 16,
               child: Row(
                 children: [
                   _TypeTab(
                     label: 'Expense',
-                    icon: Icons.arrow_upward_rounded,
+                    icon: Icons.north_east_rounded,
                     color: AppTheme.expenseColor,
                     isSelected: _type == TransactionType.expense,
-                    onTap: () =>
-                        setState(() => _type = TransactionType.expense),
+                    onTap: () => setState(() => _type = TransactionType.expense),
                   ),
                   _TypeTab(
                     label: 'Income',
-                    icon: Icons.arrow_downward_rounded,
+                    icon: Icons.south_west_rounded,
                     color: AppTheme.incomeColor,
                     isSelected: _type == TransactionType.income,
-                    onTap: () =>
-                        setState(() => _type = TransactionType.income),
+                    onTap: () => setState(() => _type = TransactionType.income),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // Amount
             Text('Amount', style: _labelStyle),
             const SizedBox(height: 8),
             TextFormField(
               controller: _amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
               style: TextStyle(
                 fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: _type == TransactionType.expense
-                    ? AppTheme.expenseColor
-                    : AppTheme.incomeColor,
+                fontWeight: FontWeight.w800,
+                color: typeColor,
               ),
               decoration: InputDecoration(
                 prefixText: '₹ ',
                 prefixStyle: TextStyle(
                   fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: _type == TransactionType.expense
-                      ? AppTheme.expenseColor
-                      : AppTheme.incomeColor,
+                  fontWeight: FontWeight.w800,
+                  color: typeColor,
                 ),
                 hintText: '0.00',
               ),
@@ -144,25 +139,24 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Description
             Text('Description', style: _labelStyle),
             const SizedBox(height: 8),
             TextFormField(
               controller: _descCtrl,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(hintText: 'What was this for?'),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Enter description' : null,
+              validator: (v) => v == null || v.trim().isEmpty ? 'Enter description' : null,
             ),
             const SizedBox(height: 20),
 
-            // Date & Time
             Text('Date & Time', style: _labelStyle),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: InkWell(
+                  child: _GlassDatePicker(
+                    icon: Icons.calendar_today_rounded,
+                    text: '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                     onTap: () async {
                       final date = await showDatePicker(
                         context: context,
@@ -172,28 +166,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       );
                       if (date != null) setState(() => _selectedDate = date);
                     },
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppTheme.cardDark,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today_rounded, size: 18),
-                          const SizedBox(width: 10),
-                          Text(
-                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: InkWell(
+                  child: _GlassDatePicker(
+                    icon: Icons.access_time_rounded,
+                    text: _selectedTime.format(context),
                     onTap: () async {
                       final time = await showTimePicker(
                         context: context,
@@ -201,28 +180,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       );
                       if (time != null) setState(() => _selectedTime = time);
                     },
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppTheme.cardDark,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.access_time_rounded, size: 18),
-                          const SizedBox(width: 10),
-                          Text(_selectedTime.format(context)),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Money Source
             Text('Whose Money?', style: _labelStyle),
             const SizedBox(height: 8),
             _PersonSelector(
@@ -233,7 +196,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Beneficiary
             Text('For Whom?', style: _labelStyle),
             const SizedBox(height: 8),
             _PersonSelector(
@@ -244,15 +206,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Tags
             Row(
               children: [
                 Text('Tags', style: _labelStyle),
                 const Spacer(),
-                TextButton.icon(
-                  onPressed: () => _addNewTag(context, ref),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('New Tag', style: TextStyle(fontSize: 12)),
+                GestureDetector(
+                  onTap: () => _addNewTag(context, ref),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_rounded, size: 16, color: AppTheme.accent1),
+                      const SizedBox(width: 4),
+                      Text('New Tag', style: TextStyle(fontSize: 12, color: AppTheme.accent1, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -274,14 +241,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       }
                     });
                   },
-                  selectedColor: AppTheme.primaryColor.withOpacity(0.3),
-                  checkmarkColor: AppTheme.primaryColor,
+                  selectedColor: AppTheme.accent1.withOpacity(0.2),
+                  checkmarkColor: AppTheme.accent1,
                 );
               }).toList(),
             ),
             const SizedBox(height: 20),
 
-            // Payment Mode
             Text('Payment Mode', style: _labelStyle),
             const SizedBox(height: 8),
             Wrap(
@@ -295,25 +261,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   onSelected: (v) {
                     if (v) setState(() => _paymentMode = mode);
                   },
-                  selectedColor: AppTheme.primaryColor.withOpacity(0.3),
+                  selectedColor: AppTheme.accent1.withOpacity(0.2),
                 );
               }).toList(),
             ),
             const SizedBox(height: 20),
 
-            // Notes
             Text('Notes (optional)', style: _labelStyle),
             const SizedBox(height: 8),
             TextFormField(
               controller: _notesCtrl,
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
-              decoration:
-                  const InputDecoration(hintText: 'Any additional notes...'),
+              decoration: const InputDecoration(hintText: 'Any additional notes...'),
             ),
             const SizedBox(height: 32),
 
-            // Save Button
             SizedBox(
               height: 54,
               child: ElevatedButton(
@@ -329,25 +292,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   TextStyle get _labelStyle => const TextStyle(
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         fontSize: 14,
-        color: Colors.white70,
+        color: AppTheme.textSecondary,
       );
 
   String _paymentModeLabel(PaymentMode mode) {
     switch (mode) {
-      case PaymentMode.cash:
-        return 'Cash';
-      case PaymentMode.upi:
-        return 'UPI';
-      case PaymentMode.creditCard:
-        return 'Credit Card';
-      case PaymentMode.debitCard:
-        return 'Debit Card';
-      case PaymentMode.bankTransfer:
-        return 'Bank Transfer';
-      case PaymentMode.other:
-        return 'Other';
+      case PaymentMode.cash: return 'Cash';
+      case PaymentMode.upi: return 'UPI';
+      case PaymentMode.creditCard: return 'Credit Card';
+      case PaymentMode.debitCard: return 'Debit Card';
+      case PaymentMode.bankTransfer: return 'Bank Transfer';
+      case PaymentMode.other: return 'Other';
     }
   }
 
@@ -357,11 +314,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     setState(() => _isSaving = true);
 
     final dateTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
+      _selectedDate.year, _selectedDate.month, _selectedDate.day,
+      _selectedTime.hour, _selectedTime.minute,
     );
 
     final txn = TransactionModel(
@@ -396,16 +350,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('New Tag'),
         content: TextField(
-          controller: ctrl,
-          autofocus: true,
+          controller: ctrl, autofocus: true,
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(hintText: 'Tag name'),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               if (ctrl.text.trim().isNotEmpty) {
@@ -427,16 +377,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('New Person'),
         content: TextField(
-          controller: ctrl,
-          autofocus: true,
+          controller: ctrl, autofocus: true,
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(hintText: 'Person name'),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               if (ctrl.text.trim().isNotEmpty) {
@@ -460,11 +406,8 @@ class _TypeTab extends StatelessWidget {
   final VoidCallback onTap;
 
   const _TypeTab({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.isSelected,
-    required this.onTap,
+    required this.label, required this.icon, required this.color,
+    required this.isSelected, required this.onTap,
   });
 
   @override
@@ -477,23 +420,49 @@ class _TypeTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: isSelected ? Border.all(color: color) : null,
+            borderRadius: BorderRadius.circular(14),
+            border: isSelected ? Border.all(color: color.withOpacity(0.4)) : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: isSelected ? color : Colors.white38, size: 20),
+              Icon(icon, color: isSelected ? color : AppTheme.textMuted, size: 20),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? color : Colors.white38,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text(label, style: TextStyle(
+                color: isSelected ? color : AppTheme.textMuted,
+                fontWeight: FontWeight.w700,
+              )),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassDatePicker extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final VoidCallback onTap;
+  const _GlassDatePicker({required this.icon, required this.text, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppTheme.textSecondary),
+            const SizedBox(width: 10),
+            Text(text, style: const TextStyle(fontSize: 14)),
+          ],
         ),
       ),
     );
@@ -507,10 +476,8 @@ class _PersonSelector extends StatelessWidget {
   final VoidCallback onAddNew;
 
   const _PersonSelector({
-    required this.persons,
-    required this.selected,
-    required this.onSelected,
-    required this.onAddNew,
+    required this.persons, required this.selected,
+    required this.onSelected, required this.onAddNew,
   });
 
   @override
@@ -524,10 +491,8 @@ class _PersonSelector extends StatelessWidget {
           return ChoiceChip(
             label: Text(p),
             selected: isSelected,
-            onSelected: (v) {
-              if (v) onSelected(p);
-            },
-            selectedColor: AppTheme.primaryColor.withOpacity(0.3),
+            onSelected: (v) { if (v) onSelected(p); },
+            selectedColor: AppTheme.accent1.withOpacity(0.2),
           );
         }),
         ActionChip(

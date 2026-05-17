@@ -71,7 +71,7 @@ class LoanDetailScreen extends ConsumerWidget {
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
-                            fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.w800),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -89,7 +89,7 @@ class LoanDetailScreen extends ConsumerWidget {
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
-                                fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.w800),
                           ),
                         ],
                       ),
@@ -107,13 +107,13 @@ class LoanDetailScreen extends ConsumerWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 36,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   '$days days since ${AppConstants.formatDate(loan.startDate)}',
-                  style: TextStyle(color: Colors.white60, fontSize: 12),
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -125,7 +125,7 @@ class LoanDetailScreen extends ConsumerWidget {
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
+                  ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           Card(
             child: Padding(
@@ -200,13 +200,13 @@ class LoanDetailScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Expected Total at End Date',
-                        style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                     const SizedBox(height: 4),
                     Text(
                       AppConstants.formatCurrency(loan.expectedTotalReturn),
                       style: TextStyle(
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
                           color: color),
                     ),
                   ],
@@ -224,7 +224,7 @@ class LoanDetailScreen extends ConsumerWidget {
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+                      ?.copyWith(fontWeight: FontWeight.w800)),
               ElevatedButton.icon(
                 onPressed: () => _addPayment(context, ref, loan),
                 icon: const Icon(Icons.add, size: 18),
@@ -247,10 +247,10 @@ class LoanDetailScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       Icon(Icons.payment_rounded,
-                          size: 48, color: Colors.white12),
+                          size: 48, color: Colors.white.withOpacity(0.06)),
                       const SizedBox(height: 12),
                       Text('No payments yet',
-                          style: TextStyle(color: Colors.white38)),
+                          style: TextStyle(color: AppTheme.textMuted)),
                     ],
                   ),
                 ),
@@ -267,19 +267,19 @@ class LoanDetailScreen extends ConsumerWidget {
                     title: Text(
                       AppConstants.formatCurrency(p.amount),
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
                           color: AppTheme.incomeColor),
                     ),
                     subtitle: Text(
                       AppConstants.formatDate(p.date),
                       style:
-                          const TextStyle(fontSize: 12, color: Colors.white38),
+                          const TextStyle(fontSize: 12, color: AppTheme.textMuted),
                     ),
                     trailing: p.notes != null
                         ? Tooltip(
                             message: p.notes!,
                             child: const Icon(Icons.info_outline_rounded,
-                                size: 18, color: Colors.white24),
+                                size: 18, color: AppTheme.textMuted),
                           )
                         : null,
                   ),
@@ -291,13 +291,13 @@ class LoanDetailScreen extends ConsumerWidget {
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+                    ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(loan.notes!,
-                    style: const TextStyle(color: Colors.white60)),
+                    style: const TextStyle(color: AppTheme.textSecondary)),
               ),
             ),
           ],
@@ -339,7 +339,7 @@ class LoanDetailScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surfaceDark,
+      backgroundColor: const Color(0xFF152A1C),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -356,7 +356,7 @@ class LoanDetailScreen extends ConsumerWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: AppTheme.textMuted,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -366,11 +366,11 @@ class LoanDetailScreen extends ConsumerWidget {
                   style: Theme.of(ctx)
                       .textTheme
                       .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+                      ?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(
                 'Due: ${AppConstants.formatCurrency(loan.totalDueNow)}',
-                style: TextStyle(color: Colors.white54, fontSize: 13),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 20),
               TextField(
@@ -383,11 +383,11 @@ class LoanDetailScreen extends ConsumerWidget {
                 ],
                 autofocus: true,
                 style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                 decoration: const InputDecoration(
                   prefixText: '₹ ',
                   prefixStyle:
-                      TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                   hintText: '0.00',
                 ),
               ),
@@ -410,9 +410,9 @@ class LoanDetailScreen extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardDark,
+                    color: Colors.white.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(color: Colors.white.withOpacity(0.06)),
                   ),
                   child: Row(
                     children: [
@@ -507,7 +507,7 @@ class _DetailRow extends StatelessWidget {
       children: [
         Flexible(
           child: Text(label,
-              style: const TextStyle(color: Colors.white54, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         ),
         Text(
           value,

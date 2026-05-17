@@ -11,6 +11,7 @@ import '../../presentation/screens/savings/add_savings_screen.dart';
 import '../../presentation/screens/savings/savings_detail_screen.dart';
 import '../../presentation/screens/analytics/analytics_screen.dart';
 import '../../presentation/screens/settings/settings_screen.dart';
+import '../../presentation/screens/mindspace/mind_space_screen.dart';
 import '../../presentation/widgets/shell_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -43,6 +44,11 @@ final appRouter = GoRouter(
           path: '/savings',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: SavingsScreen()),
+        ),
+        GoRoute(
+          path: '/mindspace',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: MindSpaceScreen()),
         ),
         GoRoute(
           path: '/analytics',
@@ -96,4 +102,3 @@ final appRouter = GoRouter(
     ),
   ],
 );
-

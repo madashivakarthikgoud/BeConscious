@@ -5,6 +5,8 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/glass_widgets.dart';
+import '../../widgets/pop_calculator.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -20,6 +22,8 @@ class HomeScreen extends ConsumerWidget {
     final totalSaved = ref.watch(totalSavedProvider);
     final recentTxns = ref.watch(transactionProvider);
     final recent = recentTxns.take(5).toList();
+    final pendingMind = ref.watch(pendingMindItemsProvider);
+    final userName = ref.watch(userNameProvider);
 
     return SafeArea(
       child: CustomScrollView(
@@ -37,79 +41,89 @@ class HomeScreen extends ConsumerWidget {
                       children: [
                         Text(
                           _greeting(),
-                          style: TextStyle(
-                            color: Colors.white60,
+                          style: const TextStyle(
+                            color: AppTheme.textSecondary,
                             fontSize: 14,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Shiva Karthik',
+                          userName,
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => context.push('/settings'),
-                    icon: const Icon(Icons.settings_rounded),
+                  GestureDetector(
+                    onTap: () => PopCalculator.show(context),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accent2.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppTheme.accent2.withOpacity(0.2)),
+                      ),
+                      child: const Icon(Icons.calculate_rounded,
+                          color: AppTheme.accent2, size: 20),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push('/settings'),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withOpacity(0.08)),
+                      ),
+                      child: const Icon(Icons.settings_rounded,
+                          color: AppTheme.textSecondary, size: 20),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
 
-          // Today's Summary Card
+          // ── BENTO GRID: Hero card (Template A) ──
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.primaryColor,
-                      AppTheme.primaryColor.withOpacity(0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: HeroAccentCard(
+                color: AppTheme.accent1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           "Today's Overview",
                           style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                            color: AppTheme.backgroundDark.withOpacity(0.6),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: AppTheme.backgroundDark.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             AppConstants.formatDateShort(DateTime.now()),
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 12),
+                            style: TextStyle(
+                              color: AppTheme.backgroundDark,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
@@ -117,31 +131,32 @@ class HomeScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     Text(
                       AppConstants.formatCurrency(todayIncome - todayExpense),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
+                        color: AppTheme.backgroundDark,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const Text(
+                    Text(
                       'Net Balance Today',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(
+                        color: AppTheme.backgroundDark.withOpacity(0.5),
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        _MiniStat(
-                          icon: Icons.arrow_downward_rounded,
+                        _HeroMiniStat(
+                          icon: Icons.south_west_rounded,
                           label: 'Income',
-                          value: AppConstants.formatCurrency(todayIncome),
-                          color: Colors.greenAccent,
+                          value: AppConstants.formatCurrencyShort(todayIncome),
                         ),
-                        const SizedBox(width: 20),
-                        _MiniStat(
-                          icon: Icons.arrow_upward_rounded,
+                        const SizedBox(width: 24),
+                        _HeroMiniStat(
+                          icon: Icons.north_east_rounded,
                           label: 'Expense',
-                          value: AppConstants.formatCurrency(todayExpense),
-                          color: Colors.redAccent,
+                          value: AppConstants.formatCurrencyShort(todayExpense),
                         ),
                       ],
                     ),
@@ -151,72 +166,88 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // Monthly Overview
+          // ── Template B: Twin metric cards ──
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
                 children: [
-                  Text(
-                    'This Month',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.incomeColor.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.trending_up_rounded,
+                                    color: AppTheme.incomeColor, size: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Income',
+                                  style: TextStyle(
+                                      color: AppTheme.textSecondary, fontSize: 12)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            AppConstants.formatCurrencyShort(monthIncome),
+                            style: const TextStyle(
+                              color: AppTheme.incomeColor,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text('This Month',
+                              style: TextStyle(color: AppTheme.textMuted, fontSize: 10)),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _StatCard(
-                        title: 'Income',
-                        value: AppConstants.formatCurrencyShort(monthIncome),
-                        icon: Icons.trending_up_rounded,
-                        color: AppTheme.incomeColor,
-                      ),
-                      const SizedBox(width: 12),
-                      _StatCard(
-                        title: 'Expense',
-                        value: AppConstants.formatCurrencyShort(monthExpense),
-                        icon: Icons.trending_down_rounded,
-                        color: AppTheme.expenseColor,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _StatCard(
-                        title: 'Loans Due',
-                        value: AppConstants.formatCurrencyShort(loansTakenDue),
-                        icon: Icons.warning_rounded,
-                        color: AppTheme.loanTakenColor,
-                      ),
-                      const SizedBox(width: 12),
-                      _StatCard(
-                        title: 'To Collect',
-                        value: AppConstants.formatCurrencyShort(loansGivenDue),
-                        icon: Icons.call_received_rounded,
-                        color: AppTheme.loanGivenColor,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Card(
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppTheme.savingsColor.withOpacity(0.2),
-                        child: Icon(Icons.savings_rounded,
-                            color: AppTheme.savingsColor),
-                      ),
-                      title: const Text('Total Saved'),
-                      trailing: Text(
-                        AppConstants.formatCurrency(totalSaved),
-                        style: TextStyle(
-                          color: AppTheme.savingsColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.expenseColor.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.trending_down_rounded,
+                                    color: AppTheme.expenseColor, size: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Expense',
+                                  style: TextStyle(
+                                      color: AppTheme.textSecondary, fontSize: 12)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            AppConstants.formatCurrencyShort(monthExpense),
+                            style: const TextStyle(
+                              color: AppTheme.expenseColor,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text('This Month',
+                              style: TextStyle(color: AppTheme.textMuted, fontSize: 10)),
+                        ],
                       ),
                     ),
                   ),
@@ -225,25 +256,209 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // Recent Transactions
+          // ── Template B: Loans & Savings twin ──
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Recent Transactions',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.loanTakenColor.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.warning_amber_rounded,
+                                    color: AppTheme.loanTakenColor, size: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text('Loans Due',
+                                    style: TextStyle(
+                                        color: AppTheme.textSecondary, fontSize: 12),
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            AppConstants.formatCurrencyShort(loansTakenDue),
+                            style: const TextStyle(
+                              color: AppTheme.loanTakenColor,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 17,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () => context.go('/transactions'),
-                    child: const Text('See All'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.loanGivenColor.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.call_received_rounded,
+                                    color: AppTheme.loanGivenColor, size: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text('To Collect',
+                                    style: TextStyle(
+                                        color: AppTheme.textSecondary, fontSize: 12),
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            AppConstants.formatCurrencyShort(loansGivenDue),
+                            style: const TextStyle(
+                              color: AppTheme.loanGivenColor,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 17,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          // ── Template D: Savings promo banner ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: GradientBanner(
+                onTap: () => context.go('/savings'),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Saved',
+                            style: TextStyle(
+                              color: AppTheme.backgroundDark.withOpacity(0.6),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            AppConstants.formatCurrency(totalSaved),
+                            style: TextStyle(
+                              color: AppTheme.backgroundDark,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundDark.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.savings_rounded,
+                          color: AppTheme.backgroundDark, size: 22),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Mind Space preview ──
+          if (pendingMind.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                child: SectionHeader(
+                  title: 'Mind Space',
+                  actionText: 'View All',
+                  onAction: () => context.go('/mindspace'),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 72,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: pendingMind.take(5).length,
+                  itemBuilder: (context, i) {
+                    final item = pendingMind[i];
+                    final colors = {
+                      'low': AppTheme.incomeColor,
+                      'medium': AppTheme.loanTakenColor,
+                      'high': AppTheme.expenseColor,
+                    };
+                    final color = colors[item.priority.name] ?? AppTheme.accent2;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: color.withOpacity(0.15)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(item.title,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                          if (item.description != null)
+                            Text(item.description!,
+                                style: TextStyle(fontSize: 10, color: AppTheme.textMuted),
+                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+
+          // ── Template C: Recent transactions ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+              child: SectionHeader(
+                title: 'Recent Transactions',
+                actionText: 'See All',
+                onAction: () => context.go('/transactions'),
               ),
             ),
           ),
@@ -256,30 +471,83 @@ class HomeScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       Icon(Icons.receipt_long_rounded,
-                          size: 64, color: Colors.white24),
+                          size: 64, color: Colors.white.withOpacity(0.08)),
                       const SizedBox(height: 12),
-                      Text(
-                        'No transactions yet',
-                        style: TextStyle(color: Colors.white38),
-                      ),
+                      const Text('No transactions yet',
+                          style: TextStyle(color: AppTheme.textMuted)),
                       const SizedBox(height: 4),
-                      Text(
-                        'Tap + to add your first transaction',
-                        style: TextStyle(color: Colors.white24, fontSize: 12),
-                      ),
+                      const Text('Tap + to add your first transaction',
+                          style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
                     ],
                   ),
                 ),
               ),
             )
           else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final txn = recent[index];
-                  return _TransactionTile(txn: txn);
-                },
-                childCount: recent.length,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GlassCard(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    children: recent.map((txn) {
+                      final isExpense = txn.type == TransactionType.expense;
+                      final color = isExpense ? AppTheme.expenseColor : AppTheme.incomeColor;
+                      final sign = isExpense ? '-' : '+';
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                isExpense
+                                    ? Icons.north_east_rounded
+                                    : Icons.south_west_rounded,
+                                color: color,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    txn.description,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600, fontSize: 14),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${txn.tags.isNotEmpty ? txn.tags.first : ''} • ${AppConstants.formatDateShort(txn.dateTime)}',
+                                    style: const TextStyle(
+                                        fontSize: 11, color: AppTheme.textMuted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '$sign${AppConstants.formatCurrency(txn.amount)}',
+                              style: TextStyle(
+                                color: color,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
               ),
             ),
 
@@ -298,17 +566,15 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _MiniStat extends StatelessWidget {
+class _HeroMiniStat extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final Color color;
 
-  const _MiniStat({
+  const _HeroMiniStat({
     required this.icon,
     required this.label,
     required this.value,
-    required this.color,
   });
 
   @override
@@ -319,129 +585,27 @@ class _MiniStat extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: AppTheme.backgroundDark.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 16),
+            child: Icon(icon, color: AppTheme.backgroundDark, size: 16),
           ),
           const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style:
-                      const TextStyle(color: Colors.white60, fontSize: 11)),
+                  style: TextStyle(
+                      color: AppTheme.backgroundDark.withOpacity(0.5),
+                      fontSize: 11)),
               Text(value,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                      color: AppTheme.backgroundDark,
+                      fontWeight: FontWeight.w700,
                       fontSize: 14)),
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: color.withOpacity(0.15),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: TextStyle(
-                            color: Colors.white60, fontSize: 12)),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TransactionTile extends StatelessWidget {
-  final TransactionModel txn;
-  const _TransactionTile({required this.txn});
-
-  @override
-  Widget build(BuildContext context) {
-    final isExpense = txn.type == TransactionType.expense;
-    final color = isExpense ? AppTheme.expenseColor : AppTheme.incomeColor;
-    final sign = isExpense ? '-' : '+';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      child: Card(
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: color.withOpacity(0.15),
-            child: Icon(
-              isExpense
-                  ? Icons.arrow_upward_rounded
-                  : Icons.arrow_downward_rounded,
-              color: color,
-              size: 20,
-            ),
-          ),
-          title: Text(
-            txn.description,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Text(
-            '${txn.tags.isNotEmpty ? txn.tags.first : ''} • ${txn.moneySourcePerson} • ${AppConstants.formatDateShort(txn.dateTime)}',
-            style: const TextStyle(fontSize: 11, color: Colors.white38),
-          ),
-          trailing: Text(
-            '$sign${AppConstants.formatCurrency(txn.amount)}',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
       ),
     );
   }
