@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,8 +8,7 @@ import '../data/datasources/local/local_database.dart';
 /// Handles all data export/import for backup and phone migration
 class BackupService {
   /// Export ALL app data as a single JSON file and share it
-  /// User can save to Google Drive, WhatsApp, Email, etc.
-  static Future<String?> exportData(BuildContext context) async {
+  static Future<String?> exportData() async {
     try {
       final data = LocalDatabase.exportAllData();
       final json = const JsonEncoder.withIndent('  ').convert(data);
@@ -34,7 +32,7 @@ class BackupService {
   }
 
   /// Export transactions only as CSV spreadsheet
-  static Future<String?> exportTransactionsCsv(BuildContext context) async {
+  static Future<String?> exportTransactionsCsv() async {
     try {
       final txns = LocalDatabase.getAllTransactions();
       if (txns.isEmpty) return 'No transactions to export';

@@ -18,6 +18,24 @@ class ShellScreen extends StatelessWidget {
     '/analytics',
   ];
 
+  static const _icons = [
+    Icons.home_rounded,
+    Icons.receipt_long_rounded,
+    Icons.handshake_rounded,
+    Icons.savings_rounded,
+    Icons.psychology_rounded,
+    Icons.analytics_rounded,
+  ];
+
+  static const _labels = [
+    'Home',
+    'Txns',
+    'Loans',
+    'Savings',
+    'Mind',
+    'Stats',
+  ];
+
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
     for (int i = 0; i < _tabs.length; i++) {
@@ -32,73 +50,112 @@ class ShellScreen extends StatelessWidget {
     return Scaffold(
       body: child,
       extendBody: true,
-      bottomNavigationBar: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundDark.withOpacity(0.85),
-              border: Border(
-                top: BorderSide(color: Colors.white.withOpacity(0.06)),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(40),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: AppTheme.cardDark.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(40),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.08),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-            ),
-            child: BottomNavigationBar(
-              currentIndex: idx,
-              onTap: (i) {
-                HapticFeedback.selectionClick();
-                context.go(_tabs[i]);
-              },
-              selectedFontSize: 10,
-              unselectedFontSize: 10,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_rounded),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long_rounded),
-                  label: 'Txns',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.handshake_rounded),
-                  label: 'Loans',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.savings_rounded),
-                  label: 'Savings',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.psychology_rounded),
-                  label: 'Mind',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.analytics_rounded),
-                  label: 'Analytics',
-                ),
-              ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(_tabs.length, (i) {
+                  // Insert FAB in the middle
+                  final items = <Widget>[];
+                  if (i == _tabs.length ~/ 2) {
+                    items.add(_buildFabCenter(context));
+                  }
+                  items.add(_buildNavItem(context, i, idx == i));
+                  return items.length == 1 ? items.first : Row(mainAxisSize: MainAxisSize.min, children: items);
+                }).expand((w) => [w]).toList(),
+              ),
             ),
           ),
         ),
       ),
-      floatingActionButton: Container(
+    );
+  }
+
+  Widget _buildNavItem(BuildContext context, int i, bool isActive) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        context.go(_tabs[i]);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          color: isActive ? AppTheme.accent1.withOpacity(0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _icons[i],
+              size: 22,
+              color: isActive ? AppTheme.accent1 : AppTheme.textMuted,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _labels[i],
+              style: AppTheme.labelSmall.copyWith(
+                fontSize: 9,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive ? AppTheme.accent1 : AppTheme.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFabCenter(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        _showQuickAddSheet(context);
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppTheme.accent1, AppTheme.accent1.withOpacity(0.7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.accent1.withOpacity(0.3),
-              blurRadius: 16,
+              color: AppTheme.accent1.withOpacity(0.35),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: FloatingActionButton(
-          onPressed: () {
-            HapticFeedback.mediumImpact();
-            _showQuickAddSheet(context);
-          },
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          child: const Icon(Icons.add_rounded, size: 28),
-        ),
+        child: const Icon(Icons.add_rounded, size: 24, color: AppTheme.backgroundDark),
       ),
     );
   }
@@ -106,103 +163,122 @@ class ShellScreen extends StatelessWidget {
   void _showQuickAddSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF152A1C),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(2),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        decoration: BoxDecoration(
+          color: AppTheme.cardDark.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 32,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Quick Add',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      _QuickAction(
+                        icon: Icons.north_east_rounded,
+                        label: 'Expense',
+                        color: AppTheme.expenseColor,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.push('/add-transaction', extra: {'type': 'expense'});
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      _QuickAction(
+                        icon: Icons.south_west_rounded,
+                        label: 'Income',
+                        color: AppTheme.incomeColor,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.push('/add-transaction', extra: {'type': 'income'});
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _QuickAction(
+                        icon: Icons.handshake_rounded,
+                        label: 'Loan',
+                        color: AppTheme.loanTakenColor,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.push('/add-loan');
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      _QuickAction(
+                        icon: Icons.savings_rounded,
+                        label: 'Savings',
+                        color: AppTheme.savingsColor,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.push('/add-savings');
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _QuickAction(
+                        icon: Icons.psychology_rounded,
+                        label: 'Mind Note',
+                        color: AppTheme.accent2,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.go('/mindspace');
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      _QuickAction(
+                        icon: Icons.calculate_rounded,
+                        label: 'Calculator',
+                        color: AppTheme.accent1,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          PopCalculator.show(context);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Quick Add',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                _QuickAction(
-                  icon: Icons.north_east_rounded,
-                  label: 'Expense',
-                  color: AppTheme.expenseColor,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.push('/add-transaction', extra: {'type': 'expense'});
-                  },
-                ),
-                const SizedBox(width: 12),
-                _QuickAction(
-                  icon: Icons.south_west_rounded,
-                  label: 'Income',
-                  color: AppTheme.incomeColor,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.push('/add-transaction', extra: {'type': 'income'});
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _QuickAction(
-                  icon: Icons.handshake_rounded,
-                  label: 'Loan',
-                  color: AppTheme.loanTakenColor,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.push('/add-loan');
-                  },
-                ),
-                const SizedBox(width: 12),
-                _QuickAction(
-                  icon: Icons.savings_rounded,
-                  label: 'Savings',
-                  color: AppTheme.savingsColor,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.push('/add-savings');
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _QuickAction(
-                  icon: Icons.psychology_rounded,
-                  label: 'Mind Note',
-                  color: AppTheme.accent2,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.go('/mindspace');
-                  },
-                ),
-                const SizedBox(width: 12),
-                _QuickAction(
-                  icon: Icons.calculate_rounded,
-                  label: 'Calculator',
-                  color: AppTheme.accent1,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    PopCalculator.show(context);
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+          ),
         ),
       ),
     );
@@ -230,12 +306,11 @@ class _QuickAction extends StatelessWidget {
           HapticFeedback.lightImpact();
           onTap();
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+        child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
             color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: color.withOpacity(0.15)),
           ),
           child: Column(

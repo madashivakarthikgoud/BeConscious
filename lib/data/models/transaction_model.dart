@@ -84,17 +84,25 @@ class TransactionModel {
       };
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    final typeIndex = json['type'] as int;
+    final payModeIndex = json['paymentMode'] as int;
     return TransactionModel(
       id: json['id'] as String,
       amount: (json['amount'] as num).toDouble(),
-      type: TransactionType.values[json['type'] as int],
+      type: typeIndex >= 0 && typeIndex < TransactionType.values.length
+          ? TransactionType.values[typeIndex]
+          : TransactionType.expense,
       dateTime: DateTime.parse(json['dateTime'] as String).toLocal(),
       description: json['description'] as String,
       notes: json['notes'] as String?,
-      moneySourcePerson: json['moneySourcePerson'] as String,
-      beneficiaryPerson: json['beneficiaryPerson'] as String,
-      tags: List<String>.from(json['tags'] as List),
-      paymentMode: PaymentMode.values[json['paymentMode'] as int],
+      moneySourcePerson: json['moneySourcePerson'] as String? ?? 'Self',
+      beneficiaryPerson: json['beneficiaryPerson'] as String? ?? 'Self',
+      tags: (json['tags'] is List)
+          ? (json['tags'] as List).whereType<String>().toList()
+          : <String>[],
+      paymentMode: payModeIndex >= 0 && payModeIndex < PaymentMode.values.length
+          ? PaymentMode.values[payModeIndex]
+          : PaymentMode.cash,
       isSynced: json['isSynced'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
       updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),

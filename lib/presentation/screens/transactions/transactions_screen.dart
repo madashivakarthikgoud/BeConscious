@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/glass_widgets.dart';
+import '../../widgets/shared_widgets.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -28,13 +29,47 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     super.dispose();
   }
 
+  List<TransactionModel> _applyFilters(List<TransactionModel> allTxns) {
+    return allTxns.where((t) {
+      if (_filterType == 'Income' && t.type != TransactionType.income) return false;
+      if (_filterType == 'Expense' && t.type != TransactionType.expense) return false;
+      if (_filterTag != 'All' && !t.tags.contains(_filterTag)) return false;
+      if (_filterPerson != 'All' &&
+          t.moneySourcePerson != _filterPerson &&
+          t.beneficiaryPerson != _filterPerson) return false;
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final matchDesc = t.description.toLowerCase().contains(q);
+        final matchNotes = (t.notes ?? '').toLowerCase().contains(q);
+        final matchTags = t.tags.any((tag) => tag.toLowerCase().contains(q));
+        final matchSource = t.moneySourcePerson.toLowerCase().contains(q);
+        final matchBeneficiary = t.beneficiaryPerson.toLowerCase().contains(q);
+        final matchAmount = t.amount.toStringAsFixed(2).contains(q);
+        final matchPayMode = t.paymentMode.name.toLowerCase().contains(q);
+        if (!matchDesc && !matchNotes && !matchTags && !matchSource &&
+            !matchBeneficiary && !matchAmount && !matchPayMode) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+  }
+
+  Map<String, List<TransactionModel>> _groupByDate(List<TransactionModel> txns) {
+    final grouped = <String, List<TransactionModel>>{};
+    for (final t in txns) {
+      final key = AppConstants.formatDateShort(t.dateTime);
+      grouped.putIfAbsent(key, () => []).add(t);
+    }
+    return grouped;
+  }
+
   @override
   Widget build(BuildContext context) {
     final allTxns = ref.watch(transactionProvider);
     final managedTags = ref.watch(tagProvider);
     final managedPersons = ref.watch(personProvider);
 
-    // Collect ALL tags actually used in transactions + managed tags
     final allUsedTags = <String>{};
     final allUsedPersons = <String>{};
     for (final t in allTxns) {
@@ -48,128 +83,33 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final tags = allUsedTags.toList()..sort();
     final persons = allUsedPersons.toList()..sort();
 
-    List<TransactionModel> filtered = allTxns.where((t) {
-      if (_filterType == 'Income' && t.type != TransactionType.income) return false;
-      if (_filterType == 'Expense' && t.type != TransactionType.expense) return false;
-      if (_filterTag != 'All' && !t.tags.contains(_filterTag)) return false;
-      if (_filterPerson != 'All' &&
-          t.moneySourcePerson != _filterPerson &&
-          t.beneficiaryPerson != _filterPerson) return false;
-      if (_searchQuery.isNotEmpty) {
-        final q = _searchQuery.toLowerCase();
-        // Search across ALL fields
-        final matchDesc = t.description.toLowerCase().contains(q);
-        final matchNotes = (t.notes ?? '').toLowerCase().contains(q);
-        final matchTags = t.tags.any((tag) => tag.toLowerCase().contains(q));
-        final matchSource = t.moneySourcePerson.toLowerCase().contains(q);
-        final matchBeneficiary = t.beneficiaryPerson.toLowerCase().contains(q);
-        final matchAmount = t.amount.toStringAsFixed(2).contains(q);
-        final matchPayMode = t.paymentMode.name.toLowerCase().contains(q);
-        if (!matchDesc && !matchNotes && !matchTags && !matchSource && 
-            !matchBeneficiary && !matchAmount && !matchPayMode) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
-
-    final grouped = <String, List<TransactionModel>>{};
-    for (final t in filtered) {
-      final key = AppConstants.formatDateShort(t.dateTime);
-      grouped.putIfAbsent(key, () => []).add(t);
-    }
+    final filtered = _applyFilters(allTxns);
+    final grouped = _groupByDate(filtered);
 
     return SafeArea(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: Row(
-              children: [
-                Text(
-                  'Transactions',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const Spacer(),
-                Text(
-                  '${filtered.length} items',
-                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                ),
-              ],
-            ),
+          _TransactionsHeader(itemCount: filtered.length),
+          _SearchBar(
+            controller: _searchController,
+            onChanged: (v) => setState(() => _searchQuery = v),
           ),
-
-          // Search
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _searchQuery = v),
-                style: const TextStyle(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Search transactions, tags, notes...',
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppTheme.textMuted),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  isDense: true,
-                ),
-              ),
-            ),
+          _FilterRow(
+            filterType: _filterType,
+            filterTag: _filterTag,
+            filterPerson: _filterPerson,
+            tags: tags,
+            persons: persons,
+            onTypeChanged: (v) => setState(() => _filterType = v),
+            onTagChanged: (v) => setState(() => _filterTag = v),
+            onPersonChanged: (v) => setState(() => _filterPerson = v),
           ),
-
-          // Filters
-          SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _FilterChip(
-                  label: _filterType,
-                  options: ['All', 'Income', 'Expense'],
-                  onSelected: (v) => setState(() => _filterType = v),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: _filterTag == 'All' ? 'Tag' : _filterTag,
-                  options: ['All', ...tags],
-                  onSelected: (v) => setState(() => _filterTag = v),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: _filterPerson == 'All' ? 'Person' : _filterPerson,
-                  options: ['All', ...persons],
-                  onSelected: (v) => setState(() => _filterPerson = v),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-
+          const SizedBox(height: AppTheme.sm),
           Expanded(
             child: filtered.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.receipt_long_rounded,
-                            size: 80, color: Colors.white.withOpacity(0.06)),
-                        const SizedBox(height: 16),
-                        const Text('No transactions found',
-                            style: TextStyle(color: AppTheme.textMuted)),
-                      ],
-                    ),
+                ? const EmptyStateWidget(
+                    icon: Icons.receipt_long_rounded,
+                    title: 'No transactions found',
                   )
                 : ListView.builder(
                     physics: const BouncingScrollPhysics(),
@@ -178,47 +118,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     itemBuilder: (context, index) {
                       final dateKey = grouped.keys.elementAt(index);
                       final items = grouped[dateKey]!;
-                      final dayTotal = items.fold(0.0, (sum, t) {
-                        return sum + (t.type == TransactionType.income ? t.amount : -t.amount);
-                      });
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(dateKey,
-                                    style: const TextStyle(
-                                      color: AppTheme.textSecondary,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13,
-                                    )),
-                                Text(
-                                  AppConstants.formatCurrency(dayTotal),
-                                  style: TextStyle(
-                                    color: dayTotal >= 0 ? AppTheme.incomeColor : AppTheme.expenseColor,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          ...items.map((txn) => _TxnItem(
-                                txn: txn,
-                                onEdit: () => context.push('/add-transaction',
-                                    extra: {'transaction': txn}),
-                                onDelete: () {
-                                  ref.read(transactionProvider.notifier).delete(txn.id);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Transaction deleted')),
-                                  );
-                                },
-                              )),
-                        ],
+                      return _DateGroup(
+                        dateKey: dateKey,
+                        items: items,
+                        onEdit: (txn) => context.push('/add-transaction',
+                            extra: {'transaction': txn}),
+                        onDelete: (txn) {
+                          ref.read(transactionProvider.notifier).delete(txn.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Transaction deleted')),
+                          );
+                        },
                       );
                     },
                   ),
@@ -228,6 +138,177 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 }
+
+// ── Header ──
+
+class _TransactionsHeader extends StatelessWidget {
+  final int itemCount;
+  const _TransactionsHeader({required this.itemCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.xl, AppTheme.lg, AppTheme.xl, 0),
+      child: Row(
+        children: [
+          Text('Transactions', style: AppTheme.headlineMedium),
+          const Spacer(),
+          Text('$itemCount items', style: AppTheme.labelSmall),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Search Bar ──
+
+class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  const _SearchBar({required this.controller, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.xl, AppTheme.md, AppTheme.xl, AppTheme.sm),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+        ),
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          style: AppTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: 'Search transactions, tags, notes...',
+            prefixIcon: const Icon(Icons.search_rounded,
+                size: 20, color: AppTheme.textMuted),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: AppTheme.md),
+            isDense: true,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Filter Row ──
+
+class _FilterRow extends StatelessWidget {
+  final String filterType;
+  final String filterTag;
+  final String filterPerson;
+  final List<String> tags;
+  final List<String> persons;
+  final ValueChanged<String> onTypeChanged;
+  final ValueChanged<String> onTagChanged;
+  final ValueChanged<String> onPersonChanged;
+
+  const _FilterRow({
+    required this.filterType,
+    required this.filterTag,
+    required this.filterPerson,
+    required this.tags,
+    required this.persons,
+    required this.onTypeChanged,
+    required this.onTagChanged,
+    required this.onPersonChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.lg),
+        children: [
+          _FilterChip(
+            label: filterType,
+            options: const ['All', 'Income', 'Expense'],
+            onSelected: onTypeChanged,
+          ),
+          const SizedBox(width: AppTheme.sm),
+          _FilterChip(
+            label: filterTag == 'All' ? 'Tag' : filterTag,
+            options: ['All', ...tags],
+            onSelected: onTagChanged,
+          ),
+          const SizedBox(width: AppTheme.sm),
+          _FilterChip(
+            label: filterPerson == 'All' ? 'Person' : filterPerson,
+            options: ['All', ...persons],
+            onSelected: onPersonChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Date Group ──
+
+class _DateGroup extends StatelessWidget {
+  final String dateKey;
+  final List<TransactionModel> items;
+  final ValueChanged<TransactionModel> onEdit;
+  final ValueChanged<TransactionModel> onDelete;
+
+  const _DateGroup({
+    required this.dateKey,
+    required this.items,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dayTotal = items.fold(0.0, (sum, t) {
+      return sum + (t.type == TransactionType.income ? t.amount : -t.amount);
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppTheme.xl, AppTheme.lg, AppTheme.xl, AppTheme.sm),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(dateKey, style: AppTheme.labelMedium.copyWith(
+                fontWeight: FontWeight.w700,
+              )),
+              Text(
+                AppConstants.formatCurrency(dayTotal),
+                style: AppTheme.labelMedium.copyWith(
+                  color: dayTotal >= 0
+                      ? AppTheme.incomeColor
+                      : AppTheme.expenseColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...items.map((txn) => _TxnItem(
+              txn: txn,
+              onEdit: () => onEdit(txn),
+              onDelete: () => onDelete(txn),
+            )),
+      ],
+    );
+  }
+}
+
+// ── Filter Chip ──
 
 class _FilterChip extends StatelessWidget {
   final String label;
@@ -247,22 +328,16 @@ class _FilterChip extends StatelessWidget {
       onTap: () {
         showModalBottomSheet(
           context: context,
-          backgroundColor: const Color(0xFF152A1C),
+          backgroundColor: AppTheme.cardDark,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.cornerRadius)),
           ),
           builder: (ctx) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.md),
+              const BottomSheetHandle(),
+              const SizedBox(height: AppTheme.lg),
               ...options.map((o) => ListTile(
                     title: Text(o),
                     trailing: o == label
@@ -273,38 +348,43 @@ class _FilterChip extends StatelessWidget {
                       onSelected(o);
                     },
                   )),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.lg),
             ],
           ),
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: AppTheme.sm),
         decoration: BoxDecoration(
-          color: isActive ? AppTheme.accent1.withOpacity(0.12) : Colors.white.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(20),
+          color: isActive
+              ? AppTheme.accent1.withOpacity(0.12)
+              : Colors.white.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
           border: Border.all(
-            color: isActive ? AppTheme.accent1.withOpacity(0.4) : Colors.white.withOpacity(0.08),
+            color: isActive
+                ? AppTheme.accent1.withOpacity(0.4)
+                : Colors.white.withOpacity(0.08),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                style: AppTheme.labelMedium.copyWith(
                   color: isActive ? AppTheme.accent1 : AppTheme.textSecondary,
                 )),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.xs),
             Icon(Icons.keyboard_arrow_down_rounded,
-                size: 16, color: isActive ? AppTheme.accent1 : AppTheme.textMuted),
+                size: 16,
+                color: isActive ? AppTheme.accent1 : AppTheme.textMuted),
           ],
         ),
       ),
     );
   }
 }
+
+// ── Transaction Item ──
 
 class _TxnItem extends StatelessWidget {
   final TransactionModel txn;
@@ -323,7 +403,8 @@ class _TxnItem extends StatelessWidget {
     final color = isExpense ? AppTheme.expenseColor : AppTheme.incomeColor;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.lg, vertical: 3),
       child: Slidable(
         endActionPane: ActionPane(
           motion: const DrawerMotion(),
@@ -334,7 +415,7 @@ class _TxnItem extends StatelessWidget {
               foregroundColor: AppTheme.backgroundDark,
               icon: Icons.edit_rounded,
               label: 'Edit',
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
             ),
             SlidableAction(
               onPressed: (_) => onDelete(),
@@ -342,7 +423,7 @@ class _TxnItem extends StatelessWidget {
               foregroundColor: Colors.white,
               icon: Icons.delete_rounded,
               label: 'Delete',
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
             ),
           ],
         ),
@@ -351,89 +432,15 @@ class _TxnItem extends StatelessWidget {
           borderRadius: AppTheme.cornerRadiusSmall,
           child: Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  isExpense ? Icons.north_east_rounded : Icons.south_west_rounded,
-                  color: color,
-                  size: 18,
-                ),
-              ),
+              _TxnIcon(isExpense: isExpense, color: color),
               const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      txn.description,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        if (txn.tags.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            margin: const EdgeInsets.only(right: 6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accent1.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              txn.tags.first,
-                              style: const TextStyle(fontSize: 10, color: AppTheme.accent1),
-                            ),
-                          ),
-                        if (txn.notes != null && txn.notes!.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            margin: const EdgeInsets.only(right: 6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accent2.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.note_rounded, size: 10, color: AppTheme.accent2),
-                                const SizedBox(width: 2),
-                                Text(
-                                  txn.notes!.length > 20 ? '${txn.notes!.substring(0, 20)}...' : txn.notes!,
-                                  style: const TextStyle(fontSize: 10, color: AppTheme.accent2),
-                                ),
-                              ],
-                            ),
-                          ),
-                        Expanded(
-                          child: Text(
-                            '${txn.moneySourcePerson} → ${txn.beneficiaryPerson}',
-                            style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          AppConstants.formatTime(txn.dateTime),
-                          style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              Expanded(child: _TxnDetails(txn: txn)),
               const SizedBox(width: 10),
               Text(
                 '${isExpense ? "-" : "+"}${AppConstants.formatCurrency(txn.amount)}',
-                style: TextStyle(
+                style: AppTheme.labelLarge.copyWith(
                   color: color,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
                 ),
               ),
             ],
@@ -444,3 +451,101 @@ class _TxnItem extends StatelessWidget {
   }
 }
 
+class _TxnIcon extends StatelessWidget {
+  final bool isExpense;
+  final Color color;
+  const _TxnIcon({required this.isExpense, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(
+        isExpense ? Icons.north_east_rounded : Icons.south_west_rounded,
+        color: color,
+        size: 18,
+      ),
+    );
+  }
+}
+
+class _TxnDetails extends StatelessWidget {
+  final TransactionModel txn;
+  const _TxnDetails({required this.txn});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(txn.description,
+            style: AppTheme.titleMedium.copyWith(fontSize: 14),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
+        const SizedBox(height: AppTheme.xs),
+        Row(
+          children: [
+            if (txn.tags.isNotEmpty)
+              _SmallBadge(
+                text: txn.tags.first,
+                color: AppTheme.accent1,
+              ),
+            if (txn.notes != null && txn.notes!.isNotEmpty)
+              _SmallBadge(
+                text: txn.notes!.length > 20
+                    ? '${txn.notes!.substring(0, 20)}...'
+                    : txn.notes!,
+                color: AppTheme.accent2,
+                icon: Icons.note_rounded,
+              ),
+            Expanded(
+              child: Text(
+                '${txn.moneySourcePerson} → ${txn.beneficiaryPerson}',
+                style: AppTheme.labelSmall,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(AppConstants.formatTime(txn.dateTime),
+                style: AppTheme.labelSmall.copyWith(fontSize: 10)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SmallBadge extends StatelessWidget {
+  final String text;
+  final Color color;
+  final IconData? icon;
+
+  const _SmallBadge({required this.text, required this.color, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.only(right: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ... [
+            Icon(icon, size: 10, color: color),
+            const SizedBox(width: 2),
+          ],
+          Text(text,
+              style: AppTheme.labelSmall.copyWith(color: color, fontSize: 10)),
+        ],
+      ),
+    );
+  }
+}

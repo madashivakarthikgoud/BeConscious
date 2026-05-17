@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../data/models/transaction_model.dart';
+import '../../data/models/loan_model.dart';
+import '../../data/models/savings_model.dart';
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/transactions/transactions_screen.dart';
 import '../../presentation/screens/transactions/add_transaction_screen.dart';
@@ -78,9 +81,14 @@ final appRouter = GoRouter(
       path: '/add-transaction',
       parentNavigatorKey: _rootNavigatorKey,
       pageBuilder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
+        final extra = state.extra is Map<String, dynamic>
+            ? state.extra as Map<String, dynamic>
+            : null;
         return _slideUpPage(
-          AddTransactionScreen(editTransaction: extra?['transaction']),
+          AddTransactionScreen(
+            editTransaction: extra?['transaction'] as TransactionModel?,
+            initialType: extra?['type'] as String?,
+          ),
           state,
         );
       },
@@ -89,16 +97,19 @@ final appRouter = GoRouter(
       path: '/add-loan',
       parentNavigatorKey: _rootNavigatorKey,
       pageBuilder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return _slideUpPage(AddLoanScreen(editLoan: extra?['loan']), state);
+        final extra = state.extra is Map<String, dynamic>
+            ? state.extra as Map<String, dynamic>
+            : null;
+        return _slideUpPage(AddLoanScreen(editLoan: extra?['loan'] as LoanModel?), state);
       },
     ),
     GoRoute(
       path: '/loan-detail/:id',
       parentNavigatorKey: _rootNavigatorKey,
       pageBuilder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
         return _slideUpPage(
-          LoanDetailScreen(loanId: state.pathParameters['id']!),
+          LoanDetailScreen(loanId: id),
           state,
         );
       },
@@ -107,16 +118,19 @@ final appRouter = GoRouter(
       path: '/add-savings',
       parentNavigatorKey: _rootNavigatorKey,
       pageBuilder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return _slideUpPage(AddSavingsScreen(editGoal: extra?['goal']), state);
+        final extra = state.extra is Map<String, dynamic>
+            ? state.extra as Map<String, dynamic>
+            : null;
+        return _slideUpPage(AddSavingsScreen(editGoal: extra?['goal'] as SavingsGoalModel?), state);
       },
     ),
     GoRoute(
       path: '/savings-detail/:id',
       parentNavigatorKey: _rootNavigatorKey,
       pageBuilder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
         return _slideUpPage(
-          SavingsDetailScreen(goalId: state.pathParameters['id']!),
+          SavingsDetailScreen(goalId: id),
           state,
         );
       },

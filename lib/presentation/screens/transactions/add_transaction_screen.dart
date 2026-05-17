@@ -7,10 +7,12 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/glass_widgets.dart';
+import '../../widgets/shared_widgets.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final TransactionModel? editTransaction;
-  const AddTransactionScreen({super.key, this.editTransaction});
+  final String? initialType;
+  const AddTransactionScreen({super.key, this.editTransaction, this.initialType});
 
   @override
   ConsumerState<AddTransactionScreen> createState() =>
@@ -49,6 +51,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _selectedTags = List.from(t.tags);
       _selectedDate = t.dateTime;
       _selectedTime = TimeOfDay.fromDateTime(t.dateTime);
+    } else if (widget.initialType == 'income') {
+      _type = TransactionType.income;
     }
   }
 
@@ -81,22 +85,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         key: _formKey,
         child: ListView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppTheme.xl),
           children: [
             // Type toggle
             GlassCard(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(AppTheme.xs),
               borderRadius: 16,
               child: Row(
                 children: [
-                  _TypeTab(
+                  TypeToggleTab(
                     label: 'Expense',
                     icon: Icons.north_east_rounded,
                     color: AppTheme.expenseColor,
                     isSelected: _type == TransactionType.expense,
                     onTap: () => setState(() => _type = TransactionType.expense),
                   ),
-                  _TypeTab(
+                  TypeToggleTab(
                     label: 'Income',
                     icon: Icons.south_west_rounded,
                     color: AppTheme.incomeColor,
@@ -106,28 +110,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.xxl),
 
-            Text('Amount', style: _labelStyle),
-            const SizedBox(height: 8),
+            Text('Amount', style: formLabelStyle),
+            const SizedBox(height: AppTheme.sm),
             TextFormField(
               controller: _amountCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: typeColor,
-              ),
+              style: AppTheme.amountLarge.copyWith(color: typeColor, fontSize: 28),
               decoration: InputDecoration(
                 prefixText: '₹ ',
-                prefixStyle: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: typeColor,
-                ),
+                prefixStyle: AppTheme.amountLarge.copyWith(color: typeColor, fontSize: 28),
                 hintText: '0.00',
               ),
               validator: (v) {
@@ -137,24 +133,24 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.xl),
 
-            Text('Description', style: _labelStyle),
-            const SizedBox(height: 8),
+            Text('Description', style: formLabelStyle),
+            const SizedBox(height: AppTheme.sm),
             TextFormField(
               controller: _descCtrl,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(hintText: 'What was this for?'),
               validator: (v) => v == null || v.trim().isEmpty ? 'Enter description' : null,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.xl),
 
-            Text('Date & Time', style: _labelStyle),
-            const SizedBox(height: 8),
+            Text('Date & Time', style: formLabelStyle),
+            const SizedBox(height: AppTheme.sm),
             Row(
               children: [
                 Expanded(
-                  child: _GlassDatePicker(
+                  child: GlassDatePickerButton(
                     icon: Icons.calendar_today_rounded,
                     text: '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                     onTap: () async {
@@ -168,9 +164,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.md),
                 Expanded(
-                  child: _GlassDatePicker(
+                  child: GlassDatePickerButton(
                     icon: Icons.access_time_rounded,
                     text: _selectedTime.format(context),
                     onTap: () async {
@@ -184,49 +180,69 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.xl),
 
-            Text('Whose Money?', style: _labelStyle),
-            const SizedBox(height: 8),
+            Text('Whose Money?', style: formLabelStyle),
+            const SizedBox(height: AppTheme.sm),
             _PersonSelector(
               persons: persons,
               selected: _moneySource,
               onSelected: (v) => setState(() => _moneySource = v),
-              onAddNew: () => _addNewPerson(context, ref),
+              onAddNew: () => showAddItemDialog(
+                context: context,
+                title: 'New Person',
+                hint: 'Person name',
+                onAdd: (name) => ref.read(personProvider.notifier).add(name),
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.xl),
 
-            Text('For Whom?', style: _labelStyle),
-            const SizedBox(height: 8),
+            Text('For Whom?', style: formLabelStyle),
+            const SizedBox(height: AppTheme.sm),
             _PersonSelector(
               persons: persons,
               selected: _beneficiary,
               onSelected: (v) => setState(() => _beneficiary = v),
-              onAddNew: () => _addNewPerson(context, ref),
+              onAddNew: () => showAddItemDialog(
+                context: context,
+                title: 'New Person',
+                hint: 'Person name',
+                onAdd: (name) => ref.read(personProvider.notifier).add(name),
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.xl),
 
             Row(
               children: [
-                Text('Tags', style: _labelStyle),
+                Text('Tags', style: formLabelStyle),
                 const Spacer(),
                 GestureDetector(
-                  onTap: () => _addNewTag(context, ref),
+                  onTap: () => showAddItemDialog(
+                    context: context,
+                    title: 'New Tag',
+                    hint: 'Tag name',
+                    onAdd: (name) => ref.read(tagProvider.notifier).add(name),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add_rounded, size: 16, color: AppTheme.accent1),
-                      const SizedBox(width: 4),
-                      Text('New Tag', style: TextStyle(fontSize: 12, color: AppTheme.accent1, fontWeight: FontWeight.w600)),
+                      const Icon(Icons.add_rounded, size: 16, color: AppTheme.accent1),
+                      const SizedBox(width: AppTheme.xs),
+                      Text('New Tag',
+                          style: AppTheme.labelSmall.copyWith(
+                            color: AppTheme.accent1,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          )),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.sm),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: AppTheme.sm,
+              runSpacing: AppTheme.sm,
               children: tags.map((tag) {
                 final selected = _selectedTags.contains(tag);
                 return FilterChip(
@@ -246,13 +262,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.xl),
 
-            Text('Payment Mode', style: _labelStyle),
-            const SizedBox(height: 8),
+            Text('Payment Mode', style: formLabelStyle),
+            const SizedBox(height: AppTheme.sm),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: AppTheme.sm,
+              runSpacing: AppTheme.sm,
               children: PaymentMode.values.map((mode) {
                 final selected = _paymentMode == mode;
                 return ChoiceChip(
@@ -265,24 +281,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.xl),
 
-            Text('Notes (optional)', style: _labelStyle),
-            const SizedBox(height: 8),
+            Text('Notes (optional)', style: formLabelStyle),
+            const SizedBox(height: AppTheme.sm),
             TextFormField(
               controller: _notesCtrl,
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(hintText: 'Any additional notes...'),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.xxxl),
 
-            SizedBox(
-              height: 54,
-              child: ElevatedButton(
-                onPressed: _save,
-                child: Text(_isEditing ? 'Update' : 'Save Transaction'),
-              ),
+            FullWidthButton(
+              label: _isEditing ? 'Update' : 'Save Transaction',
+              onPressed: _isSaving ? null : _save,
             ),
             const SizedBox(height: 40),
           ],
@@ -290,12 +303,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ),
     );
   }
-
-  TextStyle get _labelStyle => const TextStyle(
-        fontWeight: FontWeight.w700,
-        fontSize: 14,
-        color: AppTheme.textSecondary,
-      );
 
   String _paymentModeLabel(PaymentMode mode) {
     switch (mode) {
@@ -313,159 +320,41 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
 
-    final dateTime = DateTime(
-      _selectedDate.year, _selectedDate.month, _selectedDate.day,
-      _selectedTime.hour, _selectedTime.minute,
-    );
+    try {
+      final dateTime = DateTime(
+        _selectedDate.year, _selectedDate.month, _selectedDate.day,
+        _selectedTime.hour, _selectedTime.minute,
+      );
 
-    final txn = TransactionModel(
-      id: _isEditing ? widget.editTransaction!.id : const Uuid().v4(),
-      amount: double.parse(_amountCtrl.text),
-      type: _type,
-      dateTime: dateTime,
-      description: _descCtrl.text.trim(),
-      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-      moneySourcePerson: _moneySource,
-      beneficiaryPerson: _beneficiary,
-      tags: _selectedTags,
-      paymentMode: _paymentMode,
-    );
+      final txn = TransactionModel(
+        id: _isEditing ? widget.editTransaction!.id : const Uuid().v4(),
+        amount: double.parse(_amountCtrl.text),
+        type: _type,
+        dateTime: dateTime,
+        description: _descCtrl.text.trim(),
+        notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+        moneySourcePerson: _moneySource,
+        beneficiaryPerson: _beneficiary,
+        tags: _selectedTags,
+        paymentMode: _paymentMode,
+      );
 
-    if (_isEditing) {
-      ref.read(transactionProvider.notifier).update(txn);
-    } else {
-      ref.read(transactionProvider.notifier).add(txn);
+      if (_isEditing) {
+        ref.read(transactionProvider.notifier).update(txn);
+      } else {
+        ref.read(transactionProvider.notifier).add(txn);
+      }
+
+      final msg = _isEditing ? 'Transaction updated!' : 'Transaction saved!';
+      final messenger = ScaffoldMessenger.of(context);
+      context.pop();
+      messenger.showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving: $e')),
+      );
     }
-
-    final msg = _isEditing ? 'Transaction updated!' : 'Transaction saved!';
-    final messenger = ScaffoldMessenger.of(context);
-    context.pop();
-    messenger.showSnackBar(SnackBar(content: Text(msg)));
-  }
-
-  void _addNewTag(BuildContext context, WidgetRef ref) {
-    final ctrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('New Tag'),
-        content: TextField(
-          controller: ctrl, autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(hintText: 'Tag name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (ctrl.text.trim().isNotEmpty) {
-                ref.read(tagProvider.notifier).add(ctrl.text.trim());
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _addNewPerson(BuildContext context, WidgetRef ref) {
-    final ctrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('New Person'),
-        content: TextField(
-          controller: ctrl, autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(hintText: 'Person name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (ctrl.text.trim().isNotEmpty) {
-                ref.read(personProvider.notifier).add(ctrl.text.trim());
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TypeTab extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _TypeTab({
-    required this.label, required this.icon, required this.color,
-    required this.isSelected, required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            border: isSelected ? Border.all(color: color.withOpacity(0.4)) : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: isSelected ? color : AppTheme.textMuted, size: 20),
-              const SizedBox(width: 8),
-              Text(label, style: TextStyle(
-                color: isSelected ? color : AppTheme.textMuted,
-                fontWeight: FontWeight.w700,
-              )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlassDatePicker extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final VoidCallback onTap;
-  const _GlassDatePicker({required this.icon, required this.text, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: AppTheme.textSecondary),
-            const SizedBox(width: 10),
-            Text(text, style: const TextStyle(fontSize: 14)),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -476,15 +365,17 @@ class _PersonSelector extends StatelessWidget {
   final VoidCallback onAddNew;
 
   const _PersonSelector({
-    required this.persons, required this.selected,
-    required this.onSelected, required this.onAddNew,
+    required this.persons,
+    required this.selected,
+    required this.onSelected,
+    required this.onAddNew,
   });
 
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: AppTheme.sm,
+      runSpacing: AppTheme.sm,
       children: [
         ...persons.map((p) {
           final isSelected = selected == p;
@@ -503,4 +394,3 @@ class _PersonSelector extends StatelessWidget {
     );
   }
 }
-

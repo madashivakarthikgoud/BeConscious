@@ -8,6 +8,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/savings_model.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/shared_widgets.dart';
 
 class SavingsDetailScreen extends ConsumerWidget {
   final String goalId;
@@ -21,7 +22,11 @@ class SavingsDetailScreen extends ConsumerWidget {
     if (goal == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Goal Details')),
-        body: const Center(child: Text('Goal not found')),
+        body: const EmptyStateWidget(
+          icon: Icons.error_outline_rounded,
+          title: 'Goal not found',
+          subtitle: 'This goal may have been deleted.',
+        ),
       );
     }
 
@@ -248,7 +253,7 @@ class SavingsDetailScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF152A1C),
+      backgroundColor: AppTheme.cardDark,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

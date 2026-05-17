@@ -67,13 +67,14 @@ class LoanNotifier extends StateNotifier<List<LoanModel>> {
     final idx = state.indexWhere((l) => l.id == loanId);
     if (idx == -1) return;
     final loan = state[idx];
-    final updated = loan.copyWith(
-      payments: [...loan.payments, payment],
-      status: (loan.totalPaid + payment.amount) >= (loan.principalAmount + loan.currentInterest)
-          ? LoanStatus.completed
-          : loan.status,
-    );
-    await update(updated);
+    final updatedPayments = [...loan.payments, payment];
+    final updatedLoan = loan.copyWith(payments: updatedPayments);
+    // Check completion after adding payment (uses fresh interest calc)
+    final isComplete = updatedLoan.totalPaid >= (updatedLoan.principalAmount + updatedLoan.currentInterest);
+    final finalLoan = isComplete
+        ? updatedLoan.copyWith(status: LoanStatus.completed)
+        : updatedLoan;
+    await update(finalLoan);
   }
 }
 

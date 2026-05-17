@@ -115,7 +115,7 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: 'Save all data — share via Drive, WhatsApp, Email',
             color: AppTheme.incomeColor,
             onTap: () async {
-              final error = await BackupService.exportData(context);
+              final error = await BackupService.exportData();
               if (error != null && context.mounted) {
                 ScaffoldMessenger.of(context)
                     .showSnackBar(SnackBar(content: Text(error)));
@@ -182,7 +182,7 @@ class SettingsScreen extends ConsumerWidget {
             color: AppTheme.savingsColor,
             onTap: () async {
               final error =
-                  await BackupService.exportTransactionsCsv(context);
+                  await BackupService.exportTransactionsCsv();
               if (error != null && context.mounted) {
                 ScaffoldMessenger.of(context)
                     .showSnackBar(SnackBar(content: Text(error)));
@@ -433,7 +433,7 @@ class SettingsScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF152A1C),
+      backgroundColor: AppTheme.cardDark,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -538,7 +538,7 @@ class SettingsScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF152A1C),
+      backgroundColor: AppTheme.cardDark,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -664,26 +664,13 @@ class SettingsScreen extends ConsumerWidget {
               child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              final transactions = LocalDatabase.getAllTransactions();
-              for (final t in transactions) {
-                await LocalDatabase.deleteTransaction(t.id);
-              }
-              final loans = LocalDatabase.getAllLoans();
-              for (final l in loans) {
-                await LocalDatabase.deleteLoan(l.id);
-              }
-              final savings = LocalDatabase.getAllSavingsGoals();
-              for (final s in savings) {
-                await LocalDatabase.deleteSavingsGoal(s.id);
-              }
-              final mindItems = LocalDatabase.getAllMindItems();
-              for (final m in mindItems) {
-                await LocalDatabase.deleteMindItem(m.id);
-              }
+              await LocalDatabase.clearEverything();
               ref.read(transactionProvider.notifier).loadAll();
               ref.read(loanProvider.notifier).loadAll();
               ref.read(savingsProvider.notifier).loadAll();
               ref.read(mindSpaceProvider.notifier).loadAll();
+              ref.read(tagProvider.notifier).loadAll();
+              ref.read(personProvider.notifier).loadAll();
 
               if (ctx.mounted) Navigator.pop(ctx);
               if (context.mounted) {

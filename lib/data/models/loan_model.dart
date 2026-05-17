@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 enum LoanType { taken, given }
 
 enum InterestType { simple, compound }
@@ -129,16 +131,15 @@ class LoanModel {
   static double _simpleInterest(
       double principal, double annualRate, int days) {
     if (principal <= 0 || annualRate <= 0 || days <= 0) return 0.0;
-    // I = P * R * T (T in years)
     final rate = annualRate / 100.0;
     final timeYears = days / 365.0;
-    return double.parse((principal * rate * timeYears).toStringAsFixed(2));
+    final result = principal * rate * timeYears;
+    if (result.isNaN || result.isInfinite) return 0.0;
+    return double.parse(result.toStringAsFixed(2));
   }
 
   static double _compoundInterest(
       double principal, double annualRate, int days, InterestPeriod period) {
-    // A = P(1 + r/n)^(nt) - P
-    // Using dart:math pow for fractional exponents (precise)
     final rate = annualRate / 100.0;
     if (rate <= 0) return 0.0;
     int n;
@@ -154,70 +155,11 @@ class LoanModel {
         break;
     }
     final timeYears = days / 365.0;
-    // Use fractional exponent for accuracy (not rounding periods)
     final exponent = n * timeYears;
     final base = 1 + rate / n;
-    // dart:math pow handles fractional exponents correctly
-    final amount = principal * _precisionPow(base, exponent);
+    final amount = principal * math.pow(base, exponent);
+    if (amount.isNaN || amount.isInfinite) return 0.0;
     return double.parse((amount - principal).toStringAsFixed(2));
-  }
-
-  /// Precise power function supporting fractional exponents
-  /// Uses repeated multiplication for integer parts and exp/log for fractional
-  static double _precisionPow(double base, double exponent) {
-    if (exponent <= 0) return 1.0;
-    if (base <= 0) return 0.0;
-    // For large integer exponents, use loop (avoids floating point drift)
-    final intPart = exponent.truncate();
-    final fracPart = exponent - intPart;
-    double result = 1.0;
-    for (int i = 0; i < intPart; i++) {
-      result *= base;
-    }
-    if (fracPart > 0.0001) {
-      // base^frac = e^(frac * ln(base))
-      result *= _exp(fracPart * _ln(base));
-    }
-    return result;
-  }
-
-  static double _ln(double x) {
-    // Natural log using Taylor series approximation is slow;
-    // use the identity: ln(x) via iterative method
-    // For production, we use a well-known fast converging formula
-    if (x <= 0) return 0;
-    if (x == 1) return 0;
-    // Use change-of-base with known values for efficiency
-    // ln(x) = 2 * atanh((x-1)/(x+1)) for x > 0
-    final z = (x - 1) / (x + 1);
-    double sum = 0;
-    double term = z;
-    for (int i = 1; i <= 50; i += 2) {
-      sum += term / i;
-      term *= z * z;
-    }
-    return 2 * sum;
-  }
-
-  static double _exp(double x) {
-    // e^x using Taylor series
-    double sum = 1.0;
-    double term = 1.0;
-    for (int i = 1; i <= 30; i++) {
-      term *= x / i;
-      sum += term;
-      if (term.abs() < 1e-15) break;
-    }
-    return sum;
-  }
-
-  static double _pow(double base, int exponent) {
-    if (exponent <= 0) return 1.0;
-    double result = 1.0;
-    for (int i = 0; i < exponent; i++) {
-      result *= base;
-    }
-    return result;
   }
 
   LoanModel copyWith({
@@ -277,28 +219,50 @@ class LoanModel {
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };
 
-  factory LoanModel.fromJson(Map<String, dynamic> json) => LoanModel(
-        id: json['id'] as String,
-        type: LoanType.values[json['type'] as int],
-        personName: json['personName'] as String,
-        personContact: json['personContact'] as String?,
-        principalAmount: (json['principalAmount'] as num).toDouble(),
-        interestRate: (json['interestRate'] as num).toDouble(),
-        interestType: InterestType.values[json['interestType'] as int],
-        interestPeriod: InterestPeriod.values[json['interestPeriod'] as int],
-        startDate: DateTime.parse(json['startDate'] as String).toLocal(),
-        expectedEndDate: json['expectedEndDate'] != null
-            ? DateTime.parse(json['expectedEndDate'] as String).toLocal()
-            : null,
-        payments: (json['payments'] as List?)
-                ?.map((e) => LoanPayment.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-        status: LoanStatus.values[json['status'] as int],
-        notes: json['notes'] as String?,
-        isSynced: json['isSynced'] as bool? ?? false,
-        createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
-        updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
-      );
+  factory LoanModel.fromJson(Map<String, dynamic> json) {
+    final typeIdx = json['type'] as int;
+    final iTypeIdx = json['interestType'] as int;
+    final iPeriodIdx = json['interestPeriod'] as int;
+    final statusIdx = json['status'] as int;
+    return LoanModel(
+      id: json['id'] as String,
+      type: typeIdx >= 0 && typeIdx < LoanType.values.length
+          ? LoanType.values[typeIdx]
+          : LoanType.taken,
+      personName: json['personName'] as String? ?? '',
+      personContact: json['personContact'] as String?,
+      principalAmount: (json['principalAmount'] as num).toDouble(),
+      interestRate: (json['interestRate'] as num).toDouble(),
+      interestType: iTypeIdx >= 0 && iTypeIdx < InterestType.values.length
+          ? InterestType.values[iTypeIdx]
+          : InterestType.simple,
+      interestPeriod: iPeriodIdx >= 0 && iPeriodIdx < InterestPeriod.values.length
+          ? InterestPeriod.values[iPeriodIdx]
+          : InterestPeriod.yearly,
+      startDate: DateTime.parse(json['startDate'] as String).toLocal(),
+      expectedEndDate: json['expectedEndDate'] != null
+          ? DateTime.parse(json['expectedEndDate'] as String).toLocal()
+          : null,
+      payments: (json['payments'] is List)
+              ? (json['payments'] as List)
+                  .map((e) {
+                    try {
+                      return LoanPayment.fromJson(e as Map<String, dynamic>);
+                    } catch (_) {
+                      return null;
+                    }
+                  })
+                  .whereType<LoanPayment>()
+                  .toList()
+              : [],
+      status: statusIdx >= 0 && statusIdx < LoanStatus.values.length
+          ? LoanStatus.values[statusIdx]
+          : LoanStatus.active,
+      notes: json['notes'] as String?,
+      isSynced: json['isSynced'] as bool? ?? false,
+      createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+      updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
+    );
+  }
 }
 

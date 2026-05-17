@@ -6,6 +6,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/savings_model.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/shared_widgets.dart';
 
 class SavingsScreen extends ConsumerWidget {
   const SavingsScreen({super.key});
@@ -21,15 +22,12 @@ class SavingsScreen extends ConsumerWidget {
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(AppTheme.xl, AppTheme.lg, AppTheme.xl, 0),
               child: Row(
                 children: [
                   Text(
                     'Savings Goals',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                    style: AppTheme.headlineMedium,
                   ),
                   const Spacer(),
                   IconButton(
@@ -44,9 +42,9 @@ class SavingsScreen extends ConsumerWidget {
           // Total saved summary
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppTheme.xl),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppTheme.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -54,7 +52,7 @@ class SavingsScreen extends ConsumerWidget {
                       AppTheme.savingsColor.withOpacity(0.6),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
                 ),
                 child: Row(
                   children: [
@@ -62,23 +60,22 @@ class SavingsScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Total Saved',
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 13)),
-                          const SizedBox(height: 4),
+                          Text('Total Saved',
+                              style: AppTheme.labelSmall.copyWith(
+                                  color: Colors.white70)),
+                          const SizedBox(height: AppTheme.xs),
                           Text(
                             AppConstants.formatCurrency(totalSaved),
-                            style: const TextStyle(
+                            style: AppTheme.amountLarge.copyWith(
                               color: Colors.white,
                               fontSize: 28,
-                              fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppTheme.xs),
                           Text(
                             '${goals.length} active goals',
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 12),
+                            style: AppTheme.labelSmall.copyWith(
+                                color: Colors.white70),
                           ),
                         ],
                       ),
@@ -98,21 +95,12 @@ class SavingsScreen extends ConsumerWidget {
           if (goals.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.savings_rounded,
-                        size: 80, color: Colors.white.withOpacity(0.06)),
-                    const SizedBox(height: 16),
-                    Text('No savings goals yet',
-                        style: TextStyle(color: AppTheme.textMuted)),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () => context.push('/add-savings'),
-                      child: const Text('Create Goal'),
-                    ),
-                  ],
+              child: EmptyStateWidget(
+                icon: Icons.savings_rounded,
+                title: 'No savings goals yet',
+                action: ElevatedButton(
+                  onPressed: () => context.push('/add-savings'),
+                  child: const Text('Create Goal'),
                 ),
               ),
             )
@@ -140,17 +128,17 @@ class _GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(goal.colorValue);
+    final color = goal.colorValue != 0 ? Color(goal.colorValue) : AppTheme.savingsColor;
     final percent = goal.progressPercent;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.lg, vertical: AppTheme.xs),
       child: Card(
         child: InkWell(
           onTap: () => context.push('/savings-detail/${goal.id}'),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.lg),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.lg),
             child: Row(
               children: [
                 CircularPercentIndicator(
@@ -159,9 +147,8 @@ class _GoalCard extends StatelessWidget {
                   percent: percent,
                   center: Text(
                     '${(percent * 100).toInt()}%',
-                    style: TextStyle(
+                    style: AppTheme.labelSmall.copyWith(
                       color: color,
-                      fontSize: 12,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -169,22 +156,18 @@ class _GoalCard extends StatelessWidget {
                   backgroundColor: color.withOpacity(0.15),
                   circularStrokeCap: CircularStrokeCap.round,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        goal.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 16),
-                      ),
-                      const SizedBox(height: 4),
+                      Text(goal.name, style: AppTheme.titleMedium),
+                      const SizedBox(height: AppTheme.xs),
                       Text(
                         '${AppConstants.formatCurrency(goal.totalSaved)} / ${AppConstants.formatCurrency(goal.targetAmount)}',
-                        style: TextStyle(color: color, fontSize: 13),
+                        style: AppTheme.labelMedium.copyWith(color: color),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.xs),
                       Row(
                         children: [
                           Icon(Icons.timer_outlined,
@@ -192,24 +175,22 @@ class _GoalCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             '${goal.daysRemaining} days left',
-                            style: const TextStyle(
-                                fontSize: 11, color: AppTheme.textMuted),
+                            style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted, fontSize: 11),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppTheme.md),
                           Icon(Icons.trending_up_rounded,
                               size: 12, color: AppTheme.textMuted),
                           const SizedBox(width: 4),
                           Text(
                             '${AppConstants.formatCurrency(goal.requiredPerDay)}/day',
-                            style: const TextStyle(
-                                fontSize: 11, color: AppTheme.textMuted),
+                            style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted, fontSize: 11),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+                const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
               ],
             ),
           ),

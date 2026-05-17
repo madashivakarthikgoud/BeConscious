@@ -21,9 +21,19 @@ void main() async {
     await LocalDatabase.init();
   } catch (e) {
     debugPrint('Database error: $e. Reinitializing...');
-    await Hive.deleteFromDisk();
-    await LocalDatabase.init();
+    try {
+      await Hive.deleteFromDisk();
+      await LocalDatabase.init();
+    } catch (e2) {
+      debugPrint('Fatal database error: $e2');
+    }
   }
+
+  // Catch uncaught Flutter framework errors
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter error: ${details.exception}');
+  };
 
   runApp(const ProviderScope(child: BeConsciousApp()));
 }

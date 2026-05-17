@@ -5,6 +5,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/shared_widgets.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -14,19 +15,13 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
-  int _selectedPeriod = 1; // 0=today, 1=month, 2=year, 3=lifetime
+  int _selectedPeriod = 1;
 
   @override
   Widget build(BuildContext context) {
-    final todayIn = ref.watch(todayIncomeProvider);
-    final todayEx = ref.watch(todayExpenseProvider);
-    final monthIn = ref.watch(monthIncomeProvider);
-    final monthEx = ref.watch(monthExpenseProvider);
-    final yearIn = ref.watch(yearIncomeProvider);
-    final yearEx = ref.watch(yearExpenseProvider);
+    final allTxns = ref.watch(transactionProvider);
     final lifeIn = ref.watch(lifetimeIncomeProvider);
     final lifeEx = ref.watch(lifetimeExpenseProvider);
-    final allTxns = ref.watch(transactionProvider);
 
     double income, expense;
     String periodLabel;
@@ -34,20 +29,20 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
     switch (_selectedPeriod) {
       case 0:
-        income = todayIn;
-        expense = todayEx;
+        income = ref.watch(todayIncomeProvider);
+        expense = ref.watch(todayExpenseProvider);
         periodLabel = 'Today';
         periodTxns = ref.watch(todayTransactionsProvider);
         break;
       case 1:
-        income = monthIn;
-        expense = monthEx;
+        income = ref.watch(monthIncomeProvider);
+        expense = ref.watch(monthExpenseProvider);
         periodLabel = 'This Month';
         periodTxns = ref.watch(thisMonthTransactionsProvider);
         break;
       case 2:
-        income = yearIn;
-        expense = yearEx;
+        income = ref.watch(yearIncomeProvider);
+        expense = ref.watch(yearExpenseProvider);
         periodLabel = 'This Year';
         periodTxns = ref.watch(thisYearTransactionsProvider);
         break;
@@ -60,7 +55,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
     final net = income - expense;
 
-    // Tag breakdown for expenses
     final tagExpenses = <String, double>{};
     for (final t in periodTxns.where((t) => t.type == TransactionType.expense)) {
       for (final tag in t.tags) {
@@ -73,7 +67,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final sortedTags = tagExpenses.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Person breakdown
     final personExpenses = <String, double>{};
     for (final t in periodTxns.where((t) => t.type == TransactionType.expense)) {
       personExpenses[t.moneySourcePerson] =
@@ -82,11 +75,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final sortedPersons = personExpenses.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Daily trend for month view
     final dailyData = <int, double>{};
     if (_selectedPeriod == 1) {
-      for (final t
-          in periodTxns.where((t) => t.type == TransactionType.expense)) {
+      for (final t in periodTxns.where((t) => t.type == TransactionType.expense)) {
         final day = t.dateTime.day;
         dailyData[day] = (dailyData[day] ?? 0) + t.amount;
       }
@@ -98,34 +89,23 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Text(
-                'Analytics',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.w800),
-              ),
+              padding: const EdgeInsets.fromLTRB(AppTheme.xl, AppTheme.lg, AppTheme.xl, 0),
+              child: Text('Analytics', style: AppTheme.headlineMedium),
             ),
           ),
-
-          // Period selector
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(AppTheme.xl, AppTheme.lg, AppTheme.xl, 0),
               child: Row(
                 children: ['Today', 'Month', 'Year', 'Lifetime']
                     .asMap()
                     .entries
                     .map((e) => Expanded(
                           child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _selectedPeriod = e.key),
+                            onTap: () => setState(() => _selectedPeriod = e.key),
                             child: Container(
-                              margin: EdgeInsets.only(
-                                  right: e.key < 3 ? 8 : 0),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 10),
+                              margin: EdgeInsets.only(right: e.key < 3 ? AppTheme.sm : 0),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: _selectedPeriod == e.key
                                     ? AppTheme.accent1
@@ -135,8 +115,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               child: Center(
                                 child: Text(
                                   e.value,
-                                  style: TextStyle(
-                                    fontSize: 12,
+                                  style: AppTheme.labelSmall.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: _selectedPeriod == e.key
                                         ? AppTheme.backgroundDark
@@ -151,11 +130,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             ),
           ),
-
-          // Summary cards
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppTheme.xl),
               child: Column(
                 children: [
                   Row(
@@ -166,7 +143,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         color: AppTheme.incomeColor,
                         icon: Icons.arrow_downward_rounded,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.md),
                       _SummaryTile(
                         label: 'Expense',
                         amount: expense,
@@ -175,10 +152,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.md),
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(AppTheme.xl),
                       child: Row(
                         children: [
                           CircleAvatar(
@@ -196,19 +173,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   : AppTheme.expenseColor,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: AppTheme.lg),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Net ($periodLabel)',
-                                    style: const TextStyle(
-                                        color: AppTheme.textSecondary, fontSize: 12)),
+                                    style: AppTheme.labelSmall.copyWith(
+                                        color: AppTheme.textSecondary)),
                                 Text(
                                   AppConstants.formatCurrency(net),
-                                  style: TextStyle(
+                                  style: AppTheme.headlineMedium.copyWith(
                                     fontSize: 22,
-                                    fontWeight: FontWeight.w800,
                                     color: net >= 0
                                         ? AppTheme.incomeColor
                                         : AppTheme.expenseColor,
@@ -225,24 +201,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             ),
           ),
-
-          // Pie chart - expense by tag
           if (sortedTags.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Expense by Category',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 16),
+                    Text('Expense by Category', style: AppTheme.titleLarge),
+                    const SizedBox(height: AppTheme.lg),
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.lg),
                         child: Column(
                           children: [
                             SizedBox(
@@ -257,25 +227,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       .asMap()
                                       .entries
                                       .map((e) {
-                                    final colors = [
-                                      AppTheme.accent1,
-                                      AppTheme.expenseColor,
-                                      AppTheme.incomeColor,
-                                      AppTheme.loanTakenColor,
-                                      AppTheme.loanGivenColor,
-                                      AppTheme.savingsColor,
-                                      Colors.cyan,
-                                      Colors.amber,
-                                    ];
                                     return PieChartSectionData(
-                                      color: colors[e.key % colors.length],
+                                      color: chartColors[e.key % chartColors.length],
                                       value: e.value.value,
                                       title: expense > 0
                                           ? '${(e.value.value / expense * 100).toInt()}%'
                                           : '0%',
                                       radius: 45,
-                                      titleStyle: const TextStyle(
-                                        fontSize: 11,
+                                      titleStyle: AppTheme.labelSmall.copyWith(
                                         fontWeight: FontWeight.w800,
                                         color: Colors.white,
                                       ),
@@ -284,45 +243,29 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.lg),
                             ...sortedTags.take(8).toList().asMap().entries.map(
                               (e) {
-                                final colors = [
-                                  AppTheme.accent1,
-                                  AppTheme.expenseColor,
-                                  AppTheme.incomeColor,
-                                  AppTheme.loanTakenColor,
-                                  AppTheme.loanGivenColor,
-                                  AppTheme.savingsColor,
-                                  Colors.cyan,
-                                  Colors.amber,
-                                ];
                                 return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 4),
+                                  padding: const EdgeInsets.symmetric(vertical: AppTheme.xs),
                                   child: Row(
                                     children: [
                                       Container(
                                         width: 12,
                                         height: 12,
                                         decoration: BoxDecoration(
-                                          color:
-                                              colors[e.key % colors.length],
-                                          borderRadius:
-                                              BorderRadius.circular(3),
+                                          color: chartColors[e.key % chartColors.length],
+                                          borderRadius: BorderRadius.circular(3),
                                         ),
                                       ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                           child: Text(e.value.key,
-                                              style: const TextStyle(
-                                                  fontSize: 13))),
+                                              style: AppTheme.bodyMedium.copyWith(fontSize: 13))),
                                       Text(
-                                        AppConstants.formatCurrency(
-                                            e.value.value),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13),
+                                        AppConstants.formatCurrency(e.value.value),
+                                        style: AppTheme.labelMedium.copyWith(
+                                            fontWeight: FontWeight.w600),
                                       ),
                                     ],
                                   ),
@@ -337,48 +280,40 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
               ),
             ),
-
-          // Person breakdown
           if (sortedPersons.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppTheme.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Spent From (Whose Money)',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 12),
+                    Text('Spent From (Whose Money)', style: AppTheme.titleLarge),
+                    const SizedBox(height: AppTheme.md),
                     ...sortedPersons.map((e) {
                       final pct = expense > 0 ? e.value / expense : 0.0;
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.only(bottom: AppTheme.sm),
                         child: Card(
                           child: Padding(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(AppTheme.lg),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(e.key,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w600)),
+                                        style: AppTheme.titleMedium),
                                     Text(
                                       AppConstants.formatCurrency(e.value),
-                                      style: const TextStyle(
+                                      style: AppTheme.labelLarge.copyWith(
                                         fontWeight: FontWeight.w800,
                                         color: AppTheme.expenseColor,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: AppTheme.sm),
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(4),
                                   child: LinearProgressIndicator(
@@ -388,11 +323,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     minHeight: 6,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: AppTheme.xs),
                                 Text(
                                   '${(pct * 100).toInt()}% of total',
-                                  style: const TextStyle(
-                                      fontSize: 11, color: AppTheme.textMuted),
+                                  style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
                                 ),
                               ],
                             ),
@@ -404,24 +338,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
               ),
             ),
-
-          // Daily expense trend (month only)
           if (_selectedPeriod == 1 && dailyData.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Daily Expense Trend',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 12),
+                    Text('Daily Expense Trend', style: AppTheme.titleLarge),
+                    const SizedBox(height: AppTheme.md),
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.lg),
                         child: SizedBox(
                           height: 200,
                           child: BarChart(
@@ -435,22 +363,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       toY: dailyData[i + 1] ?? 0,
                                       color: AppTheme.accent1,
                                       width: 8,
-                                      borderRadius:
-                                          BorderRadius.circular(4),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
                                   ],
                                 ),
                               ),
                               titlesData: FlTitlesData(
                                 leftTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                                 topTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                                 rightTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                                 bottomTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
@@ -459,12 +383,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                           value.toInt() == 1) {
                                         return Text(
                                           '${value.toInt()}',
-                                          style: const TextStyle(
+                                          style: AppTheme.labelSmall.copyWith(
                                               fontSize: 10,
                                               color: AppTheme.textMuted),
                                         );
                                       }
-                                      return const SizedBox();
+                                      return const SizedBox.shrink();
                                     },
                                   ),
                                 ),
@@ -480,27 +404,20 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
               ),
             ),
-
-          // All-time summary
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppTheme.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('All-Time Summary',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 12),
+                  Text('All-Time Summary', style: AppTheme.titleLarge),
+                  const SizedBox(height: AppTheme.md),
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.lg),
                       child: Column(
                         children: [
-                          _SummaryRow('Total Transactions',
-                              '${allTxns.length}'),
+                          _SummaryRow('Total Transactions', '${allTxns.length}'),
                           const Divider(height: 16),
                           _SummaryRow('Lifetime Income',
                               AppConstants.formatCurrency(lifeIn),
@@ -523,7 +440,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -549,7 +465,7 @@ class _SummaryTile extends StatelessWidget {
     return Expanded(
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -557,18 +473,13 @@ class _SummaryTile extends StatelessWidget {
                 children: [
                   Icon(icon, color: color, size: 18),
                   const SizedBox(width: 6),
-                  Text(label,
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                  Text(label, style: AppTheme.labelSmall.copyWith(color: AppTheme.textSecondary)),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.sm),
               Text(
                 AppConstants.formatCurrency(amount),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTheme.amountMedium.copyWith(color: color),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -591,12 +502,11 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+        Text(label, style: AppTheme.labelMedium.copyWith(color: AppTheme.textSecondary)),
         Text(
           value,
-          style: TextStyle(
+          style: AppTheme.labelLarge.copyWith(
             fontWeight: FontWeight.w600,
-            fontSize: 14,
             color: color ?? Colors.white,
           ),
         ),
@@ -604,4 +514,3 @@ class _SummaryRow extends StatelessWidget {
     );
   }
 }
-

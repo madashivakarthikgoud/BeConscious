@@ -202,22 +202,14 @@ class SectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+          style: AppTheme.titleLarge.copyWith(fontSize: 18),
         ),
         if (actionText != null)
           GestureDetector(
             onTap: onAction,
             child: Text(
               actionText!,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.accent1,
-              ),
+              style: AppTheme.labelMedium.copyWith(color: AppTheme.accent1),
             ),
           ),
       ],
@@ -369,7 +361,7 @@ class _AnimatedEntranceState extends State<AnimatedEntrance>
 }
 
 /// Animated counter text — smoothly animates number changes
-class AnimatedCurrencyText extends StatelessWidget {
+class AnimatedCurrencyText extends StatefulWidget {
   final double value;
   final TextStyle? style;
   final String Function(double) formatter;
@@ -382,14 +374,27 @@ class AnimatedCurrencyText extends StatelessWidget {
   });
 
   @override
+  State<AnimatedCurrencyText> createState() => _AnimatedCurrencyTextState();
+}
+
+class _AnimatedCurrencyTextState extends State<AnimatedCurrencyText> {
+  double _previousValue = 0;
+
+  @override
+  void didUpdateWidget(covariant AnimatedCurrencyText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _previousValue = oldWidget.value;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: value, end: value),
+      tween: Tween(begin: _previousValue, end: widget.value),
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeOut,
       builder: (context, val, _) => Text(
-        formatter(val),
-        style: style,
+        widget.formatter(val),
+        style: widget.style,
       ),
     );
   }

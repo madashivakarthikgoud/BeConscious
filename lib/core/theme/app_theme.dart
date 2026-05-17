@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
+  AppTheme._();
+
+  // ── Spacing Tokens ──
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 12.0;
+  static const double lg = 16.0;
+  static const double xl = 20.0;
+  static const double xxl = 24.0;
+  static const double xxxl = 32.0;
+
   // ── Base Palette ──
   static const Color backgroundDark = Color(0xFF0A140F);
   static const Color backgroundDark2 = Color(0xFF12241A);
@@ -32,6 +43,78 @@ class AppTheme {
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Color(0xFF8BA898);
   static const Color textMuted = Color(0xFF5A7A66);
+
+  // ── Semantic TextStyles ──
+  static TextStyle get headlineLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 28,
+        fontWeight: FontWeight.w800,
+        color: textPrimary,
+      );
+
+  static TextStyle get headlineMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 22,
+        fontWeight: FontWeight.w800,
+        color: textPrimary,
+      );
+
+  static TextStyle get titleLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
+      );
+
+  static TextStyle get titleMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+      );
+
+  static TextStyle get bodyLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: textPrimary,
+      );
+
+  static TextStyle get bodyMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: textPrimary,
+      );
+
+  static TextStyle get labelLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: textSecondary,
+      );
+
+  static TextStyle get labelMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: textSecondary,
+      );
+
+  static TextStyle get labelSmall => GoogleFonts.plusJakartaSans(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: textMuted,
+      );
+
+  static TextStyle get amountLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 34,
+        fontWeight: FontWeight.w800,
+        color: textPrimary,
+      );
+
+  static TextStyle get amountMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        color: textPrimary,
+      );
+
+  // ── Edge Insets Helpers ──
+  static const EdgeInsets pagePadding = EdgeInsets.symmetric(horizontal: 20);
+  static const EdgeInsets cardPadding = EdgeInsets.all(20);
+  static const EdgeInsets cardPaddingCompact = EdgeInsets.all(16);
 
   static ThemeData get darkTheme {
     return ThemeData(
@@ -121,8 +204,8 @@ class AppTheme {
         foregroundColor: backgroundDark,
         elevation: 0,
       ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: backgroundDark.withOpacity(0.95),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.transparent,
         selectedItemColor: accent1,
         unselectedItemColor: textMuted,
         type: BottomNavigationBarType.fixed,
@@ -147,8 +230,10 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: const Color(0xFF1A3324),
         behavior: SnackBarBehavior.floating,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           side: BorderSide(color: Colors.white.withOpacity(0.08)),
         ),
       ),

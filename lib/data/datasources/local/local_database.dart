@@ -178,11 +178,12 @@ class LocalDatabase {
 
   static Box get _setBox => Hive.box(_settingsBox);
 
-  static dynamic getSetting(String key, {dynamic defaultValue}) {
+  /// Type-safe setting retrieval — callers must check type at boundary
+  static Object? getSetting(String key, {Object? defaultValue}) {
     return _setBox.get(key, defaultValue: defaultValue);
   }
 
-  static Future<void> setSetting(String key, dynamic value) async {
+  static Future<void> setSetting(String key, Object value) async {
     await _setBox.put(key, value);
   }
 
@@ -201,37 +202,52 @@ class LocalDatabase {
   }
 
   static Future<void> importAllData(Map<String, dynamic> data) async {
-    if (data['transactions'] != null) {
-      for (final t in data['transactions']) {
-        await saveTransaction(TransactionModel.fromJson(t));
-      }
-    }
-    if (data['loans'] != null) {
-      for (final l in data['loans']) {
-        await saveLoan(LoanModel.fromJson(l));
-      }
-    }
-    if (data['savings'] != null) {
-      for (final s in data['savings']) {
-        await saveSavingsGoal(SavingsGoalModel.fromJson(s));
-      }
-    }
-    if (data['tags'] != null) {
-      for (final t in data['tags']) {
-        final existing = getAllTags();
-        if (!existing.contains(t)) await addTag(t);
-      }
-    }
-    if (data['persons'] != null) {
-      for (final p in data['persons']) {
-        final existing = getAllPersons();
-        if (!existing.contains(p)) await addPerson(p);
-      }
-    }
-    if (data['mindSpace'] != null) {
-      for (final m in data['mindSpace']) {
+    if (data['transactions'] is List) {
+      for (final t in data['transactions'] as List) {
         try {
-          await saveMindItem(MindSpaceItem.fromJson(m as Map<String, dynamic>));
+          await saveTransaction(
+              TransactionModel.fromJson(t as Map<String, dynamic>));
+        } catch (_) {}
+      }
+    }
+    if (data['loans'] is List) {
+      for (final l in data['loans'] as List) {
+        try {
+          await saveLoan(LoanModel.fromJson(l as Map<String, dynamic>));
+        } catch (_) {}
+      }
+    }
+    if (data['savings'] is List) {
+      for (final s in data['savings'] as List) {
+        try {
+          await saveSavingsGoal(
+              SavingsGoalModel.fromJson(s as Map<String, dynamic>));
+        } catch (_) {}
+      }
+    }
+    if (data['tags'] is List) {
+      for (final t in data['tags'] as List) {
+        try {
+          final tag = t as String;
+          final existing = getAllTags();
+          if (!existing.contains(tag)) await addTag(tag);
+        } catch (_) {}
+      }
+    }
+    if (data['persons'] is List) {
+      for (final p in data['persons'] as List) {
+        try {
+          final person = p as String;
+          final existing = getAllPersons();
+          if (!existing.contains(person)) await addPerson(person);
+        } catch (_) {}
+      }
+    }
+    if (data['mindSpace'] is List) {
+      for (final m in data['mindSpace'] as List) {
+        try {
+          await saveMindItem(
+              MindSpaceItem.fromJson(m as Map<String, dynamic>));
         } catch (_) {}
       }
     }
@@ -258,5 +274,23 @@ class LocalDatabase {
     }
     results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return results;
+  }
+
+  /// Clear all user data (transactions, loans, savings, mind items)
+  static Future<void> clearAll() async {
+    await _txnBox.clear();
+    await _loanBox.clear();
+    await _savBox.clear();
+    await _mindBox.clear();
+  }
+
+  /// Clear absolutely everything including tags, persons, and settings
+  static Future<void> clearEverything() async {
+    await _txnBox.clear();
+    await _loanBox.clear();
+    await _savBox.clear();
+    await _mindBox.clear();
+    await _tagBox.clear();
+    await _personBox.clear();
   }
 }

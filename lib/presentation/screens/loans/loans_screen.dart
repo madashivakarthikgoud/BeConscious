@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/loan_model.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/glass_widgets.dart';
+import '../../widgets/shared_widgets.dart';
 
 class LoansScreen extends ConsumerStatefulWidget {
   const LoansScreen({super.key});
@@ -39,67 +40,55 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
     return SafeArea(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: Row(
-              children: [
-                Text(
-                  'Loans',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => context.push('/add-loan'),
-                  icon: const Icon(Icons.add_rounded),
-                ),
-              ],
+          ScreenHeader(
+            title: 'Loans',
+            trailing: IconButton(
+              onPressed: () => context.push('/add-loan'),
+              icon: const Icon(Icons.add_rounded),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.sm),
 
           // Summary cards
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.xl),
             child: Row(
               children: [
-                _SummaryCard(
+                MetricCard(
                   label: 'You Owe',
-                  amount: taken
+                  value: AppConstants.formatCurrency(taken
                       .where((l) => l.status == LoanStatus.active)
-                      .fold(0.0, (sum, l) => sum + l.totalDueNow),
-                  color: AppTheme.loanTakenColor,
+                      .fold(0.0, (sum, l) => sum + l.totalDueNow)),
                   icon: Icons.arrow_upward_rounded,
+                  color: AppTheme.loanTakenColor,
                 ),
-                const SizedBox(width: 12),
-                _SummaryCard(
-                  label: 'You\'re Owed',
-                  amount: given
+                const SizedBox(width: AppTheme.md),
+                MetricCard(
+                  label: "You're Owed",
+                  value: AppConstants.formatCurrency(given
                       .where((l) => l.status == LoanStatus.active)
-                      .fold(0.0, (sum, l) => sum + l.totalDueNow),
-                  color: AppTheme.loanGivenColor,
+                      .fold(0.0, (sum, l) => sum + l.totalDueNow)),
                   icon: Icons.arrow_downward_rounded,
+                  color: AppTheme.loanGivenColor,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.lg),
 
           // Tabs
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
+            margin: const EdgeInsets.symmetric(horizontal: AppTheme.xl),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.06),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.lg),
               border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: TabBar(
               controller: _tabCtrl,
               indicator: BoxDecoration(
                 color: AppTheme.accent1,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.lg),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               labelColor: AppTheme.backgroundDark,
@@ -111,7 +100,7 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.md),
 
           Expanded(
             child: TabBarView(
@@ -128,51 +117,6 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  final String label;
-  final double amount;
-  final Color color;
-  final IconData icon;
-
-  const _SummaryCard({
-    required this.label,
-    required this.amount,
-    required this.color,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, color: color, size: 18),
-                  const SizedBox(width: 6),
-                  Text(label,
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppConstants.formatCurrency(amount),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _LoanList extends StatelessWidget {
   final List<LoanModel> loans;
@@ -181,15 +125,9 @@ class _LoanList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loans.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.handshake_rounded, size: 64, color: Colors.white.withOpacity(0.06)),
-            const SizedBox(height: 16),
-            Text('No loans yet', style: TextStyle(color: AppTheme.textMuted)),
-          ],
-        ),
+      return const EmptyStateWidget(
+        icon: Icons.handshake_rounded,
+        title: 'No loans yet',
       );
     }
 
@@ -197,106 +135,134 @@ class _LoanList extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 100),
       itemCount: loans.length,
-      itemBuilder: (context, index) {
-        final loan = loans[index];
-        final isTaken = loan.type == LoanType.taken;
-        final color = isTaken ? AppTheme.loanTakenColor : AppTheme.loanGivenColor;
+      itemBuilder: (context, index) => _LoanCard(loan: loans[index]),
+    );
+  }
+}
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Card(
-            child: InkWell(
-              onTap: () => context.push('/loan-detail/${loan.id}'),
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: color.withOpacity(0.15),
-                          child: Text(
-                            loan.personName.isNotEmpty
-                                ? loan.personName[0].toUpperCase()
-                                : '?',
-                            style: TextStyle(
-                                color: color,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 18),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                loan.personName,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600, fontSize: 16),
-                              ),
-                              Text(
-                                '${loan.interestRate}% ${loan.interestType == InterestType.simple ? "Simple" : "Compound"} • ${loan.interestPeriod.name}',
-                                style: const TextStyle(
-                                    fontSize: 11, color: AppTheme.textMuted),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _StatusBadge(status: loan.status),
-                      ],
+class _LoanCard extends StatelessWidget {
+  final LoanModel loan;
+  const _LoanCard({required this.loan});
+
+  @override
+  Widget build(BuildContext context) {
+    final isTaken = loan.type == LoanType.taken;
+    final color = isTaken ? AppTheme.loanTakenColor : AppTheme.loanGivenColor;
+
+    String statusLabel;
+    Color statusColor;
+    switch (loan.status) {
+      case LoanStatus.active:
+        statusColor = AppTheme.loanTakenColor;
+        statusLabel = 'Active';
+        break;
+      case LoanStatus.completed:
+        statusColor = AppTheme.incomeColor;
+        statusLabel = 'Completed';
+        break;
+      case LoanStatus.overdue:
+        statusColor = AppTheme.expenseColor;
+        statusLabel = 'Overdue';
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.lg, vertical: AppTheme.xs),
+      child: Card(
+        child: InkWell(
+          onTap: () => context.push('/loan-detail/${loan.id}'),
+          borderRadius: BorderRadius.circular(AppTheme.lg),
+          child: Padding(
+            padding: AppTheme.cardPaddingCompact,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _LoanCardHeader(loan: loan, color: color, statusLabel: statusLabel, statusColor: statusColor),
+                const SizedBox(height: 14),
+                _LoanCardStats(loan: loan, color: color),
+                const SizedBox(height: AppTheme.sm),
+                if (loan.principalAmount + loan.currentInterest > 0)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppTheme.xs),
+                    child: LinearProgressIndicator(
+                      value: (loan.totalPaid /
+                              (loan.principalAmount + loan.currentInterest))
+                          .clamp(0.0, 1.0),
+                      backgroundColor: Colors.white.withOpacity(0.06),
+                      color: color,
+                      minHeight: 4,
                     ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        _LoanStat(
-                          label: 'Principal',
-                          value: AppConstants.formatCurrencyShort(
-                              loan.principalAmount),
-                        ),
-                        _LoanStat(
-                          label: 'Interest',
-                          value: AppConstants.formatCurrencyShort(
-                              loan.currentInterest),
-                        ),
-                        _LoanStat(
-                          label: 'Due Now',
-                          value: AppConstants.formatCurrencyShort(
-                              loan.totalDueNow),
-                          valueColor: color,
-                        ),
-                        _LoanStat(
-                          label: 'Paid',
-                          value: AppConstants.formatCurrencyShort(
-                              loan.totalPaid),
-                          valueColor: AppTheme.incomeColor,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Progress bar
-                    if (loan.principalAmount + loan.currentInterest > 0)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: (loan.totalPaid /
-                                  (loan.principalAmount + loan.currentInterest))
-                              .clamp(0.0, 1.0),
-                          backgroundColor: Colors.white.withOpacity(0.06),
-                          color: color,
-                          minHeight: 4,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+                  ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+}
+
+class _LoanCardHeader extends StatelessWidget {
+  final LoanModel loan;
+  final Color color;
+  final String statusLabel;
+  final Color statusColor;
+
+  const _LoanCardHeader({
+    required this.loan,
+    required this.color,
+    required this.statusLabel,
+    required this.statusColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 22,
+          backgroundColor: color.withOpacity(0.15),
+          child: Text(
+            loan.personName.isNotEmpty
+                ? loan.personName[0].toUpperCase()
+                : '?',
+            style: AppTheme.amountMedium.copyWith(color: color),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(loan.personName, style: AppTheme.titleMedium),
+              Text(
+                '${loan.interestRate}% ${loan.interestType == InterestType.simple ? "Simple" : "Compound"} • ${loan.interestPeriod.name}',
+                style: AppTheme.labelSmall,
+              ),
+            ],
+          ),
+        ),
+        StatusBadge(label: statusLabel, color: statusColor),
+      ],
+    );
+  }
+}
+
+class _LoanCardStats extends StatelessWidget {
+  final LoanModel loan;
+  final Color color;
+  const _LoanCardStats({required this.loan, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _LoanStat(label: 'Principal', value: AppConstants.formatCurrencyShort(loan.principalAmount)),
+        _LoanStat(label: 'Interest', value: AppConstants.formatCurrencyShort(loan.currentInterest)),
+        _LoanStat(label: 'Due Now', value: AppConstants.formatCurrencyShort(loan.totalDueNow), valueColor: color),
+        _LoanStat(label: 'Paid', value: AppConstants.formatCurrencyShort(loan.totalPaid), valueColor: AppTheme.incomeColor),
+      ],
     );
   }
 }
@@ -318,13 +284,11 @@ class _LoanStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.textMuted)),
+          Text(label, style: AppTheme.labelSmall.copyWith(fontSize: 10)),
           const SizedBox(height: 2),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+            style: AppTheme.labelMedium.copyWith(
               color: valueColor ?? Colors.white,
             ),
           ),
@@ -334,40 +298,4 @@ class _LoanStat extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  final LoanStatus status;
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    Color color;
-    String label;
-    switch (status) {
-      case LoanStatus.active:
-        color = AppTheme.loanTakenColor;
-        label = 'Active';
-        break;
-      case LoanStatus.completed:
-        color = AppTheme.incomeColor;
-        label = 'Completed';
-        break;
-      case LoanStatus.overdue:
-        color = AppTheme.expenseColor;
-        label = 'Overdue';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
 

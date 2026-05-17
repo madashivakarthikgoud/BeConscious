@@ -127,11 +127,19 @@ class SavingsGoalModel {
         name: json['name'] as String,
         targetAmount: (json['targetAmount'] as num).toDouble(),
         deadline: DateTime.parse(json['deadline'] as String).toLocal(),
-        contributions: (json['contributions'] as List?)
-                ?.map((e) =>
-                    SavingsContribution.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
+        contributions: (json['contributions'] is List)
+                ? (json['contributions'] as List)
+                    .map((e) {
+                      try {
+                        return SavingsContribution.fromJson(
+                            e as Map<String, dynamic>);
+                      } catch (_) {
+                        return null;
+                      }
+                    })
+                    .whereType<SavingsContribution>()
+                    .toList()
+                : [],
         iconName: json['iconName'] as String? ?? 'savings',
         colorValue: json['colorValue'] as int? ?? 0xFF4CAF50,
         isSynced: json['isSynced'] as bool? ?? false,

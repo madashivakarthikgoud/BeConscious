@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/savings_model.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/shared_widgets.dart';
 
 class AddSavingsScreen extends ConsumerStatefulWidget {
   final SavingsGoalModel? editGoal;
@@ -66,7 +67,7 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
           padding: const EdgeInsets.all(20),
           physics: const BouncingScrollPhysics(),
           children: [
-            Text('Goal Name', style: _labelStyle),
+            Text('Goal Name', style: formLabelStyle),
             const SizedBox(height: 8),
             TextFormField(
               controller: _nameCtrl,
@@ -77,7 +78,7 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
             ),
             const SizedBox(height: 20),
 
-            Text('Target Amount', style: _labelStyle),
+            Text('Target Amount', style: formLabelStyle),
             const SizedBox(height: 8),
             TextFormField(
               controller: _targetCtrl,
@@ -102,7 +103,7 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
             ),
             const SizedBox(height: 20),
 
-            Text('Deadline', style: _labelStyle),
+            Text('Deadline', style: formLabelStyle),
             const SizedBox(height: 8),
             InkWell(
               onTap: () async {
@@ -134,7 +135,7 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
             ),
             const SizedBox(height: 20),
 
-            Text('Color', style: _labelStyle),
+            Text('Color', style: formLabelStyle),
             const SizedBox(height: 8),
             Wrap(
               spacing: 12,
@@ -163,49 +164,48 @@ class _AddSavingsScreenState extends ConsumerState<AddSavingsScreen> {
             ),
             const SizedBox(height: 32),
 
-            SizedBox(
-              height: 54,
-              child: ElevatedButton(
-                onPressed: _save,
-                child: Text(_isEditing ? 'Update Goal' : 'Create Goal'),
-              ),
+            FullWidthButton(
+              label: _isEditing ? 'Update Goal' : 'Create Goal',
+              onPressed: _isSaving ? null : _save,
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  TextStyle get _labelStyle => const TextStyle(
-        fontWeight: FontWeight.w600,
-        fontSize: 14,
-        color: Colors.white70,
-      );
-
   void _save() {
     if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
 
-    final goal = SavingsGoalModel(
-      id: _isEditing ? widget.editGoal!.id : const Uuid().v4(),
-      name: _nameCtrl.text.trim(),
-      targetAmount: double.parse(_targetCtrl.text),
-      deadline: _deadline,
-      contributions: _isEditing ? widget.editGoal!.contributions : [],
-      colorValue: _colors[_selectedColorIndex],
-    );
+    try {
+      final goal = SavingsGoalModel(
+        id: _isEditing ? widget.editGoal!.id : const Uuid().v4(),
+        name: _nameCtrl.text.trim(),
+        targetAmount: double.parse(_targetCtrl.text),
+        deadline: _deadline,
+        contributions: _isEditing ? widget.editGoal!.contributions : [],
+        colorValue: _colors[_selectedColorIndex],
+      );
 
-    if (_isEditing) {
-      ref.read(savingsProvider.notifier).update(goal);
-    } else {
-      ref.read(savingsProvider.notifier).add(goal);
+      if (_isEditing) {
+        ref.read(savingsProvider.notifier).update(goal);
+      } else {
+        ref.read(savingsProvider.notifier).add(goal);
+      }
+
+      final msg = _isEditing ? 'Goal updated!' : 'Goal created!';
+      final messenger = ScaffoldMessenger.of(context);
+      context.pop();
+      messenger.showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving: $e')),
+      );
     }
-
-    final msg = _isEditing ? 'Goal updated!' : 'Goal created!';
-    final messenger = ScaffoldMessenger.of(context);
-    context.pop();
-    messenger.showSnackBar(SnackBar(content: Text(msg)));
   }
 }
 

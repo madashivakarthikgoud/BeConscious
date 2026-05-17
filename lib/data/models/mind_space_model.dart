@@ -52,14 +52,22 @@ class MindSpaceItem {
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };
 
-  factory MindSpaceItem.fromJson(Map<String, dynamic> json) => MindSpaceItem(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        description: json['description'] as String?,
-        status: MindItemStatus.values[json['status'] as int? ?? 0],
-        priority: MindItemPriority.values[json['priority'] as int? ?? 1],
-        createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
-        updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
-      );
+  factory MindSpaceItem.fromJson(Map<String, dynamic> json) {
+    final statusIdx = json['status'] is int ? json['status'] as int : 0;
+    final priorityIdx = json['priority'] is int ? json['priority'] as int : 1;
+    return MindSpaceItem(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      status: statusIdx >= 0 && statusIdx < MindItemStatus.values.length
+          ? MindItemStatus.values[statusIdx]
+          : MindItemStatus.pending,
+      priority: priorityIdx >= 0 && priorityIdx < MindItemPriority.values.length
+          ? MindItemPriority.values[priorityIdx]
+          : MindItemPriority.medium,
+      createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+      updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
+    );
+  }
 }
 
