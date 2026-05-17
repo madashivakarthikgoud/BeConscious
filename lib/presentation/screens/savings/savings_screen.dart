@@ -161,29 +161,43 @@ class _GoalCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(goal.name, style: AppTheme.titleMedium),
+                      Text(goal.name, style: AppTheme.titleMedium,
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: AppTheme.xs),
                       Text(
                         '${AppConstants.formatCurrency(goal.totalSaved)} / ${AppConstants.formatCurrency(goal.targetAmount)}',
                         style: AppTheme.labelMedium.copyWith(color: color),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: AppTheme.xs),
-                      Row(
+                      Wrap(
+                        spacing: AppTheme.md,
+                        runSpacing: AppTheme.xs,
                         children: [
-                          Icon(Icons.timer_outlined,
-                              size: 12, color: AppTheme.textMuted),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${goal.daysRemaining} days left',
-                            style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted, fontSize: 11),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.timer_outlined,
+                                  size: 12, color: AppTheme.textMuted),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${goal.daysRemaining} days left',
+                                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted, fontSize: 11),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: AppTheme.md),
-                          Icon(Icons.trending_up_rounded,
-                              size: 12, color: AppTheme.textMuted),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${AppConstants.formatCurrency(goal.requiredPerDay)}/day',
-                            style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted, fontSize: 11),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.trending_up_rounded,
+                                  size: 12, color: AppTheme.textMuted),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${AppConstants.formatCurrency(goal.requiredPerDay)}/day',
+                                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted, fontSize: 11),
+                              ),
+                            ],
                           ),
                         ],
                       ),

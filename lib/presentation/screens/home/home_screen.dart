@@ -9,6 +9,7 @@ import '../../widgets/glass_widgets.dart';
 import '../../widgets/shared_widgets.dart';
 
 
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -23,7 +24,6 @@ class HomeScreen extends ConsumerWidget {
           SliverToBoxAdapter(child: _MonthlyMetricsRow()),
           SliverToBoxAdapter(child: _LoansMetricsRow()),
           SliverToBoxAdapter(child: _SavingsBanner()),
-          _MindSpacePreview(),
           _RecentTransactionsSection(),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
@@ -148,6 +148,8 @@ class _TodayHeroCard extends ConsumerWidget {
               AppConstants.formatCurrency(todayIncome - todayExpense),
               style: AppTheme.amountLarge
                   .copyWith(color: AppTheme.backgroundDark),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             Text('Net Balance Today',
                 style: AppTheme.labelMedium.copyWith(
@@ -201,19 +203,23 @@ class _HeroMiniStat extends StatelessWidget {
             child: Icon(icon, color: AppTheme.backgroundDark, size: 16),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: AppTheme.labelSmall.copyWith(
-                    color: AppTheme.backgroundDark.withOpacity(0.5),
-                  )),
-              Text(value,
-                  style: AppTheme.labelLarge.copyWith(
-                    color: AppTheme.backgroundDark,
-                    fontWeight: FontWeight.w700,
-                  )),
-            ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: AppTheme.labelSmall.copyWith(
+                      color: AppTheme.backgroundDark.withOpacity(0.5),
+                    )),
+                Text(value,
+                    style: AppTheme.labelLarge.copyWith(
+                      color: AppTheme.backgroundDark,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ],
       ),
@@ -339,95 +345,6 @@ class _SavingsBanner extends ConsumerWidget {
   }
 }
 
-// ── Mind Space Preview ──
-
-class _MindSpacePreview extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pendingMind = ref.watch(pendingMindItemsProvider);
-
-    if (pendingMind.isEmpty) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    return SliverToBoxAdapter(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppTheme.xl, AppTheme.xxl, AppTheme.xl, AppTheme.md),
-            child: SectionHeader(
-              title: 'Mind Space',
-              actionText: 'View All',
-              onAction: () => context.go('/mindspace'),
-            ),
-          ),
-          SizedBox(
-            height: 72,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppTheme.lg),
-              itemCount: pendingMind.take(5).length,
-              itemBuilder: (context, i) {
-                final item = pendingMind[i];
-                final color = priorityColorMap[item.priority.name] ??
-                    AppTheme.accent2;
-                return _MindPreviewChip(
-                  title: item.title,
-                  description: item.description,
-                  color: color,
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MindPreviewChip extends StatelessWidget {
-  final String title;
-  final String? description;
-  final Color color;
-
-  const _MindPreviewChip({
-    required this.title,
-    this.description,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppTheme.xs),
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.lg, vertical: AppTheme.md),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(AppTheme.cornerRadiusSmall),
-        border: Border.all(color: color.withOpacity(0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title,
-              style: AppTheme.labelMedium
-                  .copyWith(fontWeight: FontWeight.w600, color: Colors.white),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          if (description != null)
-            Text(description!,
-                style: AppTheme.labelSmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Recent Transactions ──
 
@@ -518,15 +435,26 @@ class _RecentTxnTile extends StatelessWidget {
                 Text(
                   '${txn.tags.isNotEmpty ? txn.tags.first : ''} • ${AppConstants.formatDateShort(txn.dateTime)}',
                   style: AppTheme.labelSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          Text(
-            '$sign${AppConstants.formatCurrency(txn.amount)}',
-            style: AppTheme.labelLarge.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
+          const SizedBox(width: 8),
+          Flexible(
+            flex: 0,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.35),
+              child: Text(
+                '$sign${AppConstants.formatCurrencyShort(txn.amount)}',
+                style: AppTheme.labelLarge.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ],

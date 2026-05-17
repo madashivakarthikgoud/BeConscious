@@ -266,7 +266,9 @@ class MetricCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(value,
-                  style: AppTheme.amountMedium.copyWith(color: color)),
+                  style: AppTheme.amountMedium.copyWith(color: color),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -293,17 +295,24 @@ class DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Flexible(
+          flex: 2,
           child: Text(label, style: AppTheme.labelMedium),
         ),
-        Text(
-          value,
-          style: AppTheme.bodyMedium.copyWith(
-            color: valueColor ?? Colors.white70,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-            fontSize: isBold ? 16 : 14,
+        const SizedBox(width: 8),
+        Flexible(
+          flex: 3,
+          child: Text(
+            value,
+            style: AppTheme.bodyMedium.copyWith(
+              color: valueColor ?? Colors.white70,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+              fontSize: isBold ? 16 : 14,
+            ),
+            textAlign: TextAlign.end,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

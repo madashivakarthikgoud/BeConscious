@@ -111,10 +111,13 @@ class SettingsScreen extends ConsumerWidget {
 
           _SettingsTile(
             icon: Icons.upload_rounded,
-            title: 'Export Full Backup (JSON)',
-            subtitle: 'Save all data — share via Drive, WhatsApp, Email',
+            title: 'Export Full Backup',
+            subtitle: 'Save all data as JSON — share via Drive, WhatsApp, Email',
             color: AppTheme.incomeColor,
             onTap: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Preparing backup…'), duration: Duration(seconds: 1)),
+              );
               final error = await BackupService.exportData();
               if (error != null && context.mounted) {
                 ScaffoldMessenger.of(context)
@@ -125,8 +128,8 @@ class SettingsScreen extends ConsumerWidget {
 
           _SettingsTile(
             icon: Icons.download_rounded,
-            title: 'Import Backup (JSON)',
-            subtitle: 'Restore data from a backup file',
+            title: 'Import Backup',
+            subtitle: 'Restore all data from a JSON backup file',
             color: AppTheme.loanGivenColor,
             onTap: () async {
               final confirmed = await showDialog<bool>(
@@ -171,21 +174,6 @@ class SettingsScreen extends ConsumerWidget {
                   content: Text('❌ $result'),
                   backgroundColor: AppTheme.expenseColor,
                 ));
-              }
-            },
-          ),
-
-          _SettingsTile(
-            icon: Icons.table_chart_rounded,
-            title: 'Export Transactions (CSV)',
-            subtitle: 'Open in Excel / Google Sheets',
-            color: AppTheme.savingsColor,
-            onTap: () async {
-              final error =
-                  await BackupService.exportTransactionsCsv();
-              if (error != null && context.mounted) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(error)));
               }
             },
           ),

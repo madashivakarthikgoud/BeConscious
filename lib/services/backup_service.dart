@@ -31,36 +31,6 @@ class BackupService {
     }
   }
 
-  /// Export transactions only as CSV spreadsheet
-  static Future<String?> exportTransactionsCsv() async {
-    try {
-      final txns = LocalDatabase.getAllTransactions();
-      if (txns.isEmpty) return 'No transactions to export';
-
-      final buffer = StringBuffer();
-      buffer.writeln('Date,Time,Type,Amount,Description,Tags,Money Source,For Whom,Payment Mode,Notes');
-      for (final t in txns) {
-        final date = '${t.dateTime.year}-${t.dateTime.month.toString().padLeft(2, '0')}-${t.dateTime.day.toString().padLeft(2, '0')}';
-        final time = '${t.dateTime.hour.toString().padLeft(2, '0')}:${t.dateTime.minute.toString().padLeft(2, '0')}';
-        buffer.writeln(
-            '"$date","$time","${t.type.name}","${t.amount}","${t.description.replaceAll('"', '""')}","${t.tags.join(', ')}","${t.moneySourcePerson}","${t.beneficiaryPerson}","${t.paymentMode.name}","${(t.notes ?? '').replaceAll('"', '""')}"');
-      }
-
-      final dir = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().toIso8601String().split('.')[0].replaceAll(':', '-');
-      final file = File('${dir.path}/BeConscious_Transactions_$timestamp.csv');
-      await file.writeAsString(buffer.toString());
-
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'BeConscious Transactions',
-      );
-
-      return null; // success
-    } catch (e) {
-      return 'Export failed: $e';
-    }
-  }
 
   /// Import data from a backup JSON file
   /// Merges with existing data (won't create duplicates for same IDs)

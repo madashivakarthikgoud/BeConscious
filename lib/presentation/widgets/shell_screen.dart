@@ -102,24 +102,24 @@ class ShellScreen extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         decoration: BoxDecoration(
           color: isActive ? AppTheme.accent1.withOpacity(0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               _icons[i],
-              size: 22,
+              size: 18,
               color: isActive ? AppTheme.accent1 : AppTheme.textMuted,
             ),
             const SizedBox(height: 2),
             Text(
               _labels[i],
               style: AppTheme.labelSmall.copyWith(
-                fontSize: 9,
+                fontSize: 7,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                 color: isActive ? AppTheme.accent1 : AppTheme.textMuted,
               ),
@@ -137,8 +137,8 @@ class ShellScreen extends StatelessWidget {
         _showQuickAddSheet(context);
       },
       child: Container(
-        width: 44,
-        height: 44,
+        width: 36,
+        height: 36,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -155,7 +155,7 @@ class ShellScreen extends StatelessWidget {
             ),
           ],
         ),
-        child: const Icon(Icons.add_rounded, size: 24, color: AppTheme.backgroundDark),
+        child: const Icon(Icons.add_rounded, size: 20, color: AppTheme.backgroundDark),
       ),
     );
   }

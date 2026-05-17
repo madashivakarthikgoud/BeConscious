@@ -122,11 +122,15 @@ class SavingsDetailScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w800,
                       color: color,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     'of ${AppConstants.formatCurrency(goal.targetAmount)}',
                     style:
                         const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -232,9 +236,14 @@ class SavingsDetailScreen extends ConsumerWidget {
                           fontSize: 12, color: AppTheme.textMuted),
                     ),
                     trailing: c.notes != null
-                        ? Text(c.notes!,
-                            style: const TextStyle(
-                                fontSize: 11, color: AppTheme.textMuted))
+                        ? ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 100),
+                            child: Text(c.notes!,
+                                style: const TextStyle(
+                                    fontSize: 11, color: AppTheme.textMuted),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
+                          )
                         : null,
                   ),
                 )),

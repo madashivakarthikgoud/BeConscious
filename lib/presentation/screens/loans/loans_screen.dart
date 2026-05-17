@@ -56,7 +56,7 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
               children: [
                 MetricCard(
                   label: 'You Owe',
-                  value: AppConstants.formatCurrency(taken
+                  value: AppConstants.formatCurrencyShort(taken
                       .where((l) => l.status == LoanStatus.active)
                       .fold(0.0, (sum, l) => sum + l.totalDueNow)),
                   icon: Icons.arrow_upward_rounded,
@@ -65,7 +65,7 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
                 const SizedBox(width: AppTheme.md),
                 MetricCard(
                   label: "You're Owed",
-                  value: AppConstants.formatCurrency(given
+                  value: AppConstants.formatCurrencyShort(given
                       .where((l) => l.status == LoanStatus.active)
                       .fold(0.0, (sum, l) => sum + l.totalDueNow)),
                   icon: Icons.arrow_downward_rounded,
@@ -235,10 +235,13 @@ class _LoanCardHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(loan.personName, style: AppTheme.titleMedium),
+              Text(loan.personName, style: AppTheme.titleMedium,
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
               Text(
-                '${loan.interestRate}% ${loan.interestType == InterestType.simple ? "Simple" : "Compound"} • ${loan.interestPeriod.name}',
+                '${loan.interestRate}% ${loan.interestType == InterestType.simple ? "SI" : "CI"} • ${loan.interestPeriod.name}',
                 style: AppTheme.labelSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -284,13 +287,16 @@ class _LoanStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTheme.labelSmall.copyWith(fontSize: 10)),
+          Text(label, style: AppTheme.labelSmall.copyWith(fontSize: 10),
+              maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 2),
           Text(
             value,
             style: AppTheme.labelMedium.copyWith(
               color: valueColor ?? Colors.white,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

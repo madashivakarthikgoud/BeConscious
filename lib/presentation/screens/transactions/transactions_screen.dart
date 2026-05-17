@@ -181,7 +181,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(txn.description, style: AppTheme.headlineMedium.copyWith(fontSize: 18)),
+                      Text(txn.description, style: AppTheme.headlineMedium.copyWith(fontSize: 18),
+                          maxLines: 2, overflow: TextOverflow.ellipsis),
                       Text(
                         isExpense ? 'Expense' : 'Income',
                         style: AppTheme.labelSmall.copyWith(color: color),
@@ -275,10 +276,17 @@ class _DetailItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTheme.labelMedium.copyWith(color: AppTheme.textMuted)),
-          Text(value, style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+          Flexible(
+            flex: 2,
+            child: Text(label, style: AppTheme.labelMedium.copyWith(color: AppTheme.textMuted)),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            flex: 3,
+            child: Text(value, style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                textAlign: TextAlign.end, maxLines: 2, overflow: TextOverflow.ellipsis),
+          ),
         ],
       ),
     );
@@ -590,12 +598,20 @@ class _TxnItem extends StatelessWidget {
                 _TxnIcon(isExpense: isExpense, color: color),
                 const SizedBox(width: 14),
                 Expanded(child: _TxnDetails(txn: txn)),
-                const SizedBox(width: 10),
-                Text(
-                  '${isExpense ? "-" : "+"}${AppConstants.formatCurrency(txn.amount)}',
-                  style: AppTheme.labelLarge.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w800,
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.30,
+                  ),
+                  child: Text(
+                    '${isExpense ? "-" : "+"}${AppConstants.formatCurrencyShort(txn.amount)}',
+                    style: AppTheme.labelLarge.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
                   ),
                 ),
               ],
@@ -647,28 +663,30 @@ class _TxnDetails extends StatelessWidget {
         Row(
           children: [
             if (txn.tags.isNotEmpty)
-              _SmallBadge(
-                text: txn.tags.first,
-                color: AppTheme.accent1,
+              Flexible(
+                child: _SmallBadge(
+                  text: txn.tags.first,
+                  color: AppTheme.accent1,
+                ),
               ),
             if (txn.notes != null && txn.notes!.isNotEmpty)
-              _SmallBadge(
-                text: txn.notes!.length > 20
-                    ? '${txn.notes!.substring(0, 20)}...'
-                    : txn.notes!,
-                color: AppTheme.accent2,
-                icon: Icons.note_rounded,
+              Flexible(
+                child: _SmallBadge(
+                  text: txn.notes!.length > 12
+                      ? '${txn.notes!.substring(0, 12)}…'
+                      : txn.notes!,
+                  color: AppTheme.accent2,
+                  icon: Icons.note_rounded,
+                ),
               ),
-            Expanded(
-              child: Text(
-                '${txn.moneySourcePerson} → ${txn.beneficiaryPerson}',
-                style: AppTheme.labelSmall,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Text(AppConstants.formatTime(txn.dateTime),
-                style: AppTheme.labelSmall.copyWith(fontSize: 10)),
           ],
+        ),
+        const SizedBox(height: 3),
+        Text(
+          '${txn.moneySourcePerson} → ${txn.beneficiaryPerson}  •  ${AppConstants.formatTime(txn.dateTime)}',
+          style: AppTheme.labelSmall,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -698,8 +716,12 @@ class _SmallBadge extends StatelessWidget {
             Icon(icon, size: 10, color: color),
             const SizedBox(width: 2),
           ],
-          Text(text,
-              style: AppTheme.labelSmall.copyWith(color: color, fontSize: 10)),
+          Flexible(
+            child: Text(text,
+                style: AppTheme.labelSmall.copyWith(color: color, fontSize: 10),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+          ),
         ],
       ),
     );

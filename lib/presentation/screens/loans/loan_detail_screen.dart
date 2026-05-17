@@ -269,7 +269,8 @@ class _LoanSummaryCard extends StatelessWidget {
                     Text(isTaken ? 'You Borrowed From' : 'You Lent To',
                         style: AppTheme.labelSmall.copyWith(color: Colors.white70)),
                     Text(loan.personName,
-                        style: AppTheme.titleLarge.copyWith(color: Colors.white)),
+                        style: AppTheme.titleLarge.copyWith(color: Colors.white),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
@@ -282,6 +283,8 @@ class _LoanSummaryCard extends StatelessWidget {
           Text(
             AppConstants.formatCurrency(loan.totalDueNow),
             style: AppTheme.amountLarge.copyWith(color: Colors.white, fontSize: 36),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
           Text(
@@ -380,6 +383,8 @@ class _ExpectedTotalCard extends StatelessWidget {
             Text(
               AppConstants.formatCurrency(loan.expectedTotalReturn),
               style: AppTheme.headlineMedium.copyWith(color: color),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

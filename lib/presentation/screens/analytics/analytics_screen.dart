@@ -521,6 +521,7 @@ class _SummaryTile extends StatelessWidget {
               Text(
                 AppConstants.formatCurrency(amount),
                 style: AppTheme.amountMedium.copyWith(color: color),
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -543,12 +544,20 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTheme.labelMedium.copyWith(color: AppTheme.textSecondary)),
-        Text(
-          value,
-          style: AppTheme.labelLarge.copyWith(
-            fontWeight: FontWeight.w600,
-            color: color ?? Colors.white,
+        Flexible(
+          child: Text(label, style: AppTheme.labelMedium.copyWith(color: AppTheme.textSecondary)),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            style: AppTheme.labelLarge.copyWith(
+              fontWeight: FontWeight.w600,
+              color: color ?? Colors.white,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
           ),
         ),
       ],
