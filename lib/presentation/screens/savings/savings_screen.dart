@@ -78,7 +78,7 @@ class SavingsScreen extends ConsumerWidget {
                           Text(
                             '${goals.length} active goals',
                             style: const TextStyle(
-                                color: AppTheme.textSecondary, fontSize: 12),
+                                color: Colors.white70, fontSize: 12),
                           ),
                         ],
                       ),

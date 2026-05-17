@@ -102,7 +102,7 @@ class _LoansScreenState extends ConsumerState<LoansScreen>
                 borderRadius: BorderRadius.circular(16),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: Colors.white,
+              labelColor: AppTheme.backgroundDark,
               unselectedLabelColor: AppTheme.textSecondary,
               dividerColor: Colors.transparent,
               tabs: [
@@ -219,7 +219,9 @@ class _LoanList extends StatelessWidget {
                           radius: 22,
                           backgroundColor: color.withOpacity(0.15),
                           child: Text(
-                            loan.personName[0].toUpperCase(),
+                            loan.personName.isNotEmpty
+                                ? loan.personName[0].toUpperCase()
+                                : '?',
                             style: TextStyle(
                                 color: color,
                                 fontWeight: FontWeight.w800,

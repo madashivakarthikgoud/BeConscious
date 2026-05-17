@@ -67,7 +67,9 @@ class LoanDetailScreen extends ConsumerWidget {
                       radius: 24,
                       backgroundColor: Colors.white.withOpacity(0.2),
                       child: Text(
-                        loan.personName[0].toUpperCase(),
+                        loan.personName.isNotEmpty
+                            ? loan.personName[0].toUpperCase()
+                            : '?',
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -113,7 +115,7 @@ class LoanDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 6),
                 Text(
                   '$days days since ${AppConstants.formatDate(loan.startDate)}',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
