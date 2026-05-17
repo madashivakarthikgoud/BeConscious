@@ -183,7 +183,8 @@ final personProvider = StateNotifierProvider<PersonNotifier, List<String>>(
 // ==================== THEME ====================
 
 final isDarkModeProvider = StateProvider<bool>((ref) {
-  return LocalDatabase.getSetting('darkMode', defaultValue: true) as bool;
+  final stored = LocalDatabase.getSetting('darkMode', defaultValue: true);
+  return stored is bool ? stored : true;
 });
 
 // ==================== USER NAME ====================
@@ -193,8 +194,9 @@ final userNameProvider = StateNotifierProvider<UserNameNotifier, String>(
 );
 
 class UserNameNotifier extends StateNotifier<String> {
-  UserNameNotifier() : super('') {
-    state = (LocalDatabase.getSetting('userName', defaultValue: 'User') as String?) ?? 'User';
+  UserNameNotifier() : super('User') {
+    final stored = LocalDatabase.getSetting('userName', defaultValue: 'User');
+    state = (stored is String && stored.isNotEmpty) ? stored : 'User';
   }
 
   Future<void> setName(String name) async {

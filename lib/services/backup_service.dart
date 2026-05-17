@@ -98,6 +98,7 @@ class BackupService {
       if (data['transactions'] != null) count += (data['transactions'] as List).length;
       if (data['loans'] != null) count += (data['loans'] as List).length;
       if (data['savings'] != null) count += (data['savings'] as List).length;
+      if (data['mindSpace'] != null) count += (data['mindSpace'] as List).length;
 
       return 'SUCCESS:$count'; // special success format
     } catch (e) {

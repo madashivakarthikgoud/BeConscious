@@ -193,6 +193,7 @@ class LocalDatabase {
       'transactions': getAllTransactions().map((t) => t.toJson()).toList(),
       'loans': getAllLoans().map((l) => l.toJson()).toList(),
       'savings': getAllSavingsGoals().map((s) => s.toJson()).toList(),
+      'mindSpace': getAllMindItems().map((m) => m.toJson()).toList(),
       'tags': getAllTags(),
       'persons': getAllPersons(),
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
@@ -225,6 +226,13 @@ class LocalDatabase {
       for (final p in data['persons']) {
         final existing = getAllPersons();
         if (!existing.contains(p)) await addPerson(p);
+      }
+    }
+    if (data['mindSpace'] != null) {
+      for (final m in data['mindSpace']) {
+        try {
+          await saveMindItem(MindSpaceItem.fromJson(m as Map<String, dynamic>));
+        } catch (_) {}
       }
     }
   }

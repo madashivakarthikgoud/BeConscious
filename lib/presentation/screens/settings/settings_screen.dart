@@ -393,7 +393,7 @@ class SettingsScreen extends ConsumerWidget {
 
   static void _openGitHub() async {
     final uri =
-        Uri.parse('https://github.com/madashivakarthikgoud/BeConscious');
+        Uri.parse('https://github.com/madashivakarthikgoud');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
