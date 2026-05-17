@@ -24,7 +24,7 @@ class _MindSpaceScreenState extends ConsumerState<MindSpaceScreen> {
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(child: _MindSpaceHeader(onAdd: () => _showMindSheet(context))),
+          SliverToBoxAdapter(child: _MindSpaceHeader()),
           SliverToBoxAdapter(child: _QuickAddBanner(onTap: () => _showMindSheet(context))),
           if (pending.isNotEmpty) ...[
             SliverToBoxAdapter(
@@ -39,9 +39,10 @@ class _MindSpaceScreenState extends ConsumerState<MindSpaceScreen> {
                   final item = pending[index];
                   return _MindItemCard(
                     item: item,
-                    onToggle: () => ref.read(mindSpaceProvider.notifier).toggleComplete(item.id),
+                    onToggle: () => _confirmComplete(item),
                     onEdit: () => _showMindSheet(context, editItem: item),
                     onDelete: () => ref.read(mindSpaceProvider.notifier).delete(item.id),
+                    onTap: () => _showDetailSheet(context, item),
                   );
                 },
                 childCount: pending.length,
@@ -61,7 +62,15 @@ class _MindSpaceScreenState extends ConsumerState<MindSpaceScreen> {
                   final item = completed[index];
                   return _CompletedMindCard(
                     item: item,
-                    onTap: () {
+                    onUncomplete: () {
+                      ref.read(mindSpaceProvider.notifier).update(
+                        item.copyWith(status: MindItemStatus.pending),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Moved back to pending')),
+                      );
+                    },
+                    onDelete: () {
                       ref.read(mindSpaceProvider.notifier).delete(item.id);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Item cleared!')),
@@ -88,7 +97,97 @@ class _MindSpaceScreenState extends ConsumerState<MindSpaceScreen> {
     );
   }
 
-  /// Unified add/edit sheet — eliminates the massive DRY violation
+  void _confirmComplete(MindSpaceItem item) {
+    ref.read(mindSpaceProvider.notifier).toggleComplete(item.id);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Marked as completed'),
+        action: SnackBarAction(
+          label: 'UNDO',
+          onPressed: () {
+            ref.read(mindSpaceProvider.notifier).update(
+              item.copyWith(status: MindItemStatus.pending),
+            );
+          },
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void _showDetailSheet(BuildContext context, MindSpaceItem item) {
+    final color = priorityColorMap[item.priority.name] ?? AppTheme.accent2;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.cardDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.cornerRadius)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (ctx, scrollController) => Padding(
+          padding: const EdgeInsets.fromLTRB(AppTheme.xxl, AppTheme.lg, AppTheme.xxl, AppTheme.xxl),
+          child: ListView(
+            controller: scrollController,
+            children: [
+              const BottomSheetHandle(),
+              const SizedBox(height: AppTheme.xl),
+              Row(
+                children: [
+                  StatusBadge(
+                    label: item.priority.name[0].toUpperCase() + item.priority.name.substring(1),
+                    color: color,
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}',
+                    style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.lg),
+              Text(item.title, style: AppTheme.headlineMedium),
+              if (item.description != null) ...[
+                const SizedBox(height: AppTheme.lg),
+                Text(item.description!, style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
+              ],
+              const SizedBox(height: AppTheme.xxl),
+              Row(
+                children: [
+                  Expanded(
+                    child: FullWidthButton(
+                      label: 'Edit',
+                      backgroundColor: color.withOpacity(0.2),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showMindSheet(context, editItem: item);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.md),
+                  Expanded(
+                    child: FullWidthButton(
+                      label: 'Done',
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _confirmComplete(item);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showMindSheet(BuildContext context, {MindSpaceItem? editItem}) {
     final isEditing = editItem != null;
     final titleCtrl = TextEditingController(text: editItem?.title ?? '');
@@ -128,7 +227,8 @@ class _MindSpaceScreenState extends ConsumerState<MindSpaceScreen> {
               TextField(
                 controller: descCtrl,
                 textCapitalization: TextCapitalization.sentences,
-                maxLines: 2,
+                maxLines: 4,
+                minLines: 2,
                 decoration: const InputDecoration(hintText: 'Details (optional)'),
               ),
               const SizedBox(height: AppTheme.lg),
@@ -172,48 +272,23 @@ class _MindSpaceScreenState extends ConsumerState<MindSpaceScreen> {
   }
 }
 
-// ── Header ──
-
 class _MindSpaceHeader extends StatelessWidget {
-  final VoidCallback onAdd;
-  const _MindSpaceHeader({required this.onAdd});
-
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppTheme.xl, AppTheme.xl, AppTheme.xl, 0),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Mind Space 🧠', style: AppTheme.headlineLarge.copyWith(fontSize: 26)),
-                const SizedBox(height: AppTheme.xs),
-                Text("Things you don't want to forget",
-                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: onAdd,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppTheme.accent1,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.add_rounded, color: AppTheme.backgroundDark, size: 24),
-            ),
-          ),
+          Text('Mind Space 🧠', style: AppTheme.headlineLarge.copyWith(fontSize: 26)),
+          const SizedBox(height: AppTheme.xs),
+          Text("Things you don't want to forget",
+              style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
         ],
       ),
     );
   }
 }
-
-// ── Quick Add Banner ──
 
 class _QuickAddBanner extends StatelessWidget {
   final VoidCallback onTap;
@@ -260,8 +335,6 @@ class _QuickAddBanner extends StatelessWidget {
   }
 }
 
-// ── Priority Selector (extracted from duplicated code) ──
-
 class _PrioritySelector extends StatelessWidget {
   final MindItemPriority selected;
   final ValueChanged<MindItemPriority> onChanged;
@@ -305,19 +378,19 @@ class _PrioritySelector extends StatelessWidget {
   }
 }
 
-// ── Mind Item Card ──
-
 class _MindItemCard extends StatelessWidget {
   final MindSpaceItem item;
   final VoidCallback onToggle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onTap;
 
   const _MindItemCard({
     required this.item,
     required this.onToggle,
     required this.onEdit,
     required this.onDelete,
+    required this.onTap,
   });
 
   @override
@@ -326,105 +399,62 @@ class _MindItemCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.xl, vertical: AppTheme.xs),
-      child: GlassCard(
-        padding: AppTheme.cardPaddingCompact,
-        borderColor: color.withOpacity(0.2),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: onToggle,
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: color, width: 2),
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.title, style: AppTheme.titleMedium.copyWith(fontSize: 15)),
-                  if (item.description != null) ...[
-                    const SizedBox(height: AppTheme.xs),
-                    Text(item.description!,
-                        style: AppTheme.labelSmall.copyWith(
-                          color: AppTheme.textSecondary,
-                          fontSize: 12,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis),
-                  ],
-                ],
-              ),
-            ),
-            StatusBadge(
-              label: item.priority.name[0].toUpperCase() + item.priority.name.substring(1),
-              color: color,
-            ),
-            const SizedBox(width: AppTheme.sm),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded, color: AppTheme.textMuted, size: 20),
-              onSelected: (v) {
-                if (v == 'edit') onEdit();
-                if (v == 'delete') onDelete();
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Completed Card ──
-
-class _CompletedMindCard extends StatelessWidget {
-  final MindSpaceItem item;
-  final VoidCallback onTap;
-
-  const _CompletedMindCard({required this.item, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.xl, vertical: AppTheme.xs),
       child: GestureDetector(
         onTap: onTap,
         child: GlassCard(
           padding: AppTheme.cardPaddingCompact,
-          opacity: 0.04,
+          borderColor: color.withOpacity(0.2),
           child: Row(
             children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.accent1.withOpacity(0.2),
-                ),
-                child: const Icon(Icons.check_rounded, size: 16, color: AppTheme.accent1),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.textMuted,
-                    decoration: TextDecoration.lineThrough,
+              GestureDetector(
+                onTap: onToggle,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color, width: 2),
                   ),
                 ),
               ),
-              const Icon(Icons.close_rounded, size: 16, color: AppTheme.textMuted),
-              const SizedBox(width: AppTheme.xs),
-              Text('Tap to clear', style: AppTheme.labelSmall.copyWith(fontSize: 10)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.title,
+                        style: AppTheme.titleMedium.copyWith(fontSize: 15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                    if (item.description != null) ...[
+                      const SizedBox(height: AppTheme.xs),
+                      Text(item.description!,
+                          style: AppTheme.labelSmall.copyWith(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ],
+                ),
+              ),
+              StatusBadge(
+                label: item.priority.name[0].toUpperCase() + item.priority.name.substring(1),
+                color: color,
+              ),
+              const SizedBox(width: AppTheme.sm),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded, color: AppTheme.textMuted, size: 20),
+                onSelected: (v) {
+                  if (v == 'edit') onEdit();
+                  if (v == 'delete') onDelete();
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              ),
             ],
           ),
         ),
@@ -433,3 +463,76 @@ class _CompletedMindCard extends StatelessWidget {
   }
 }
 
+class _CompletedMindCard extends StatelessWidget {
+  final MindSpaceItem item;
+  final VoidCallback onUncomplete;
+  final VoidCallback onDelete;
+
+  const _CompletedMindCard({
+    required this.item,
+    required this.onUncomplete,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.xl, vertical: AppTheme.xs),
+      child: GlassCard(
+        padding: AppTheme.cardPaddingCompact,
+        opacity: 0.04,
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: onUncomplete,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.accent1.withOpacity(0.2),
+                ),
+                child: const Icon(Icons.check_rounded, size: 16, color: AppTheme.accent1),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                item.title,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textMuted,
+                  decoration: TextDecoration.lineThrough,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            GestureDetector(
+              onTap: onDelete,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.close_rounded, size: 16, color: AppTheme.expenseColor),
+                  const SizedBox(width: AppTheme.xs),
+                  Text('Delete', style: AppTheme.labelSmall.copyWith(fontSize: 10, color: AppTheme.expenseColor)),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppTheme.md),
+            GestureDetector(
+              onTap: onUncomplete,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.undo_rounded, size: 16, color: AppTheme.accent1),
+                  const SizedBox(width: AppTheme.xs),
+                  Text('Keep', style: AppTheme.labelSmall.copyWith(fontSize: 10, color: AppTheme.accent1)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

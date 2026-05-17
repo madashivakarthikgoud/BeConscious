@@ -7,7 +7,7 @@ import '../../../data/models/transaction_model.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/glass_widgets.dart';
 import '../../widgets/shared_widgets.dart';
-import '../../widgets/pop_calculator.dart';
+
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -55,12 +55,6 @@ class _GreetingHeader extends ConsumerWidget {
               ],
             ),
           ),
-          _HeaderIconButton(
-            icon: Icons.calculate_rounded,
-            color: AppTheme.accent2,
-            onTap: () => PopCalculator.show(context),
-          ),
-          const SizedBox(width: AppTheme.sm),
           _HeaderIconButton(
             icon: Icons.settings_rounded,
             color: AppTheme.textSecondary,
@@ -241,14 +235,14 @@ class _MonthlyMetricsRow extends ConsumerWidget {
       child: Row(
         children: [
           MetricCard(
-            label: 'Income',
+            label: 'This Month Income',
             value: AppConstants.formatCurrencyShort(monthIncome),
             icon: Icons.trending_up_rounded,
             color: AppTheme.incomeColor,
           ),
           const SizedBox(width: AppTheme.md),
           MetricCard(
-            label: 'Expense',
+            label: 'This Month Expense',
             value: AppConstants.formatCurrencyShort(monthExpense),
             icon: Icons.trending_down_rounded,
             color: AppTheme.expenseColor,

@@ -342,12 +342,10 @@ class MindSpaceNotifier extends StateNotifier<List<MindSpaceItem>> {
     final idx = state.indexWhere((i) => i.id == id);
     if (idx == -1) return;
     final item = state[idx];
-    if (item.status == MindItemStatus.completed) {
-      // If already completed, tapping deletes it
-      await delete(id);
-    } else {
-      await update(item.copyWith(status: MindItemStatus.completed));
-    }
+    final newStatus = item.status == MindItemStatus.completed
+        ? MindItemStatus.pending
+        : MindItemStatus.completed;
+    await update(item.copyWith(status: newStatus));
   }
 }
 

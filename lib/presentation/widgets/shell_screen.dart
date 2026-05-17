@@ -203,7 +203,7 @@ class ShellScreen extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
+                    Row(
                     children: [
                       _QuickAction(
                         icon: Icons.north_east_rounded,
@@ -211,7 +211,9 @@ class ShellScreen extends StatelessWidget {
                         color: AppTheme.expenseColor,
                         onTap: () {
                           Navigator.pop(ctx);
-                          context.push('/add-transaction', extra: {'type': 'expense'});
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            context.push('/add-transaction', extra: {'type': 'expense'});
+                          });
                         },
                       ),
                       const SizedBox(width: 12),
@@ -221,7 +223,9 @@ class ShellScreen extends StatelessWidget {
                         color: AppTheme.incomeColor,
                         onTap: () {
                           Navigator.pop(ctx);
-                          context.push('/add-transaction', extra: {'type': 'income'});
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            context.push('/add-transaction', extra: {'type': 'income'});
+                          });
                         },
                       ),
                     ],
@@ -235,7 +239,9 @@ class ShellScreen extends StatelessWidget {
                         color: AppTheme.loanTakenColor,
                         onTap: () {
                           Navigator.pop(ctx);
-                          context.push('/add-loan');
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            context.push('/add-loan');
+                          });
                         },
                       ),
                       const SizedBox(width: 12),
@@ -245,7 +251,9 @@ class ShellScreen extends StatelessWidget {
                         color: AppTheme.savingsColor,
                         onTap: () {
                           Navigator.pop(ctx);
-                          context.push('/add-savings');
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            context.push('/add-savings');
+                          });
                         },
                       ),
                     ],
@@ -259,7 +267,9 @@ class ShellScreen extends StatelessWidget {
                         color: AppTheme.accent2,
                         onTap: () {
                           Navigator.pop(ctx);
-                          context.go('/mindspace');
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            context.go('/mindspace');
+                          });
                         },
                       ),
                       const SizedBox(width: 12),
@@ -269,7 +279,9 @@ class ShellScreen extends StatelessWidget {
                         color: AppTheme.accent1,
                         onTap: () {
                           Navigator.pop(ctx);
-                          PopCalculator.show(context);
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            PopCalculator.show(context);
+                          });
                         },
                       ),
                     ],

@@ -121,6 +121,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       return _DateGroup(
                         dateKey: dateKey,
                         items: items,
+                        onTap: (txn) => _showTransactionDetail(context, txn),
                         onEdit: (txn) => context.push('/add-transaction',
                             extra: {'transaction': txn}),
                         onDelete: (txn) {
@@ -137,9 +138,152 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       ),
     );
   }
+
+  void _showTransactionDetail(BuildContext context, TransactionModel txn) {
+    final isExpense = txn.type == TransactionType.expense;
+    final color = isExpense ? AppTheme.expenseColor : AppTheme.incomeColor;
+    final sign = isExpense ? '-' : '+';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.cardDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.cornerRadius)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (ctx, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(AppTheme.xxl, AppTheme.lg, AppTheme.xxl, AppTheme.xxl),
+          children: [
+            const BottomSheetHandle(),
+            const SizedBox(height: AppTheme.xl),
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    isExpense ? Icons.north_east_rounded : Icons.south_west_rounded,
+                    color: color, size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(txn.description, style: AppTheme.headlineMedium.copyWith(fontSize: 18)),
+                      Text(
+                        isExpense ? 'Expense' : 'Income',
+                        style: AppTheme.labelSmall.copyWith(color: color),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.xl),
+            Text(
+              '$sign${AppConstants.formatCurrency(txn.amount)}',
+              style: AppTheme.amountLarge.copyWith(color: color),
+            ),
+            const SizedBox(height: AppTheme.xxl),
+            _DetailItem('Date', AppConstants.formatDateShort(txn.dateTime)),
+            _DetailItem('Time', AppConstants.formatTime(txn.dateTime)),
+            _DetailItem('From (Whose Money)', txn.moneySourcePerson),
+            _DetailItem('For (Beneficiary)', txn.beneficiaryPerson),
+            _DetailItem('Payment Mode', _paymentModeLabel(txn.paymentMode)),
+            if (txn.tags.isNotEmpty)
+              _DetailItem('Tags', txn.tags.join(', ')),
+            if (txn.notes != null && txn.notes!.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.md),
+              Text('Notes', style: AppTheme.labelMedium.copyWith(color: AppTheme.textMuted)),
+              const SizedBox(height: AppTheme.xs),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppTheme.md),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(txn.notes!, style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
+              ),
+            ],
+            const SizedBox(height: AppTheme.xxl),
+            Row(
+              children: [
+                Expanded(
+                  child: FullWidthButton(
+                    label: 'Edit',
+                    backgroundColor: color.withOpacity(0.2),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.push('/add-transaction', extra: {'transaction': txn});
+                    },
+                  ),
+                ),
+                const SizedBox(width: AppTheme.md),
+                Expanded(
+                  child: FullWidthButton(
+                    label: 'Delete',
+                    backgroundColor: AppTheme.expenseColor.withOpacity(0.2),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      ref.read(transactionProvider.notifier).delete(txn.id);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Transaction deleted')),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _paymentModeLabel(PaymentMode mode) {
+    switch (mode) {
+      case PaymentMode.cash: return 'Cash';
+      case PaymentMode.upi: return 'UPI';
+      case PaymentMode.creditCard: return 'Credit Card';
+      case PaymentMode.debitCard: return 'Debit Card';
+      case PaymentMode.bankTransfer: return 'Bank Transfer';
+      case PaymentMode.other: return 'Other';
+    }
+  }
 }
 
-// ── Header ──
+class _DetailItem extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DetailItem(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTheme.labelMedium.copyWith(color: AppTheme.textMuted)),
+          Text(value, style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
 
 class _TransactionsHeader extends StatelessWidget {
   final int itemCount;
@@ -159,8 +303,6 @@ class _TransactionsHeader extends StatelessWidget {
     );
   }
 }
-
-// ── Search Bar ──
 
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -198,8 +340,6 @@ class _SearchBar extends StatelessWidget {
     );
   }
 }
-
-// ── Filter Row ──
 
 class _FilterRow extends StatelessWidget {
   final String filterType;
@@ -253,17 +393,17 @@ class _FilterRow extends StatelessWidget {
   }
 }
 
-// ── Date Group ──
-
 class _DateGroup extends StatelessWidget {
   final String dateKey;
   final List<TransactionModel> items;
+  final ValueChanged<TransactionModel> onTap;
   final ValueChanged<TransactionModel> onEdit;
   final ValueChanged<TransactionModel> onDelete;
 
   const _DateGroup({
     required this.dateKey,
     required this.items,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
@@ -300,6 +440,7 @@ class _DateGroup extends StatelessWidget {
         ),
         ...items.map((txn) => _TxnItem(
               txn: txn,
+              onTap: () => onTap(txn),
               onEdit: () => onEdit(txn),
               onDelete: () => onDelete(txn),
             )),
@@ -307,8 +448,6 @@ class _DateGroup extends StatelessWidget {
     );
   }
 }
-
-// ── Filter Chip ──
 
 class _FilterChip extends StatelessWidget {
   final String label;
@@ -329,27 +468,41 @@ class _FilterChip extends StatelessWidget {
         showModalBottomSheet(
           context: context,
           backgroundColor: AppTheme.cardDark,
+          isScrollControlled: true,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.cornerRadius)),
           ),
-          builder: (ctx) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: AppTheme.md),
-              const BottomSheetHandle(),
-              const SizedBox(height: AppTheme.lg),
-              ...options.map((o) => ListTile(
-                    title: Text(o),
-                    trailing: o == label
-                        ? const Icon(Icons.check_rounded, color: AppTheme.accent1)
-                        : null,
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      onSelected(o);
+          builder: (ctx) => DraggableScrollableSheet(
+            initialChildSize: options.length > 8 ? 0.6 : 0.4,
+            minChildSize: 0.25,
+            maxChildSize: 0.8,
+            expand: false,
+            builder: (ctx, scrollController) => Column(
+              children: [
+                const SizedBox(height: AppTheme.md),
+                const BottomSheetHandle(),
+                const SizedBox(height: AppTheme.lg),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemCount: options.length,
+                    itemBuilder: (ctx, i) {
+                      final o = options[i];
+                      return ListTile(
+                        title: Text(o),
+                        trailing: o == label
+                            ? const Icon(Icons.check_rounded, color: AppTheme.accent1)
+                            : null,
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          onSelected(o);
+                        },
+                      );
                     },
-                  )),
-              const SizedBox(height: AppTheme.lg),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -384,15 +537,15 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-// ── Transaction Item ──
-
 class _TxnItem extends StatelessWidget {
   final TransactionModel txn;
+  final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _TxnItem({
     required this.txn,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
@@ -427,23 +580,26 @@ class _TxnItem extends StatelessWidget {
             ),
           ],
         ),
-        child: GlassCard(
-          padding: const EdgeInsets.all(14),
-          borderRadius: AppTheme.cornerRadiusSmall,
-          child: Row(
-            children: [
-              _TxnIcon(isExpense: isExpense, color: color),
-              const SizedBox(width: 14),
-              Expanded(child: _TxnDetails(txn: txn)),
-              const SizedBox(width: 10),
-              Text(
-                '${isExpense ? "-" : "+"}${AppConstants.formatCurrency(txn.amount)}',
-                style: AppTheme.labelLarge.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
+        child: GestureDetector(
+          onTap: onTap,
+          child: GlassCard(
+            padding: const EdgeInsets.all(14),
+            borderRadius: AppTheme.cornerRadiusSmall,
+            child: Row(
+              children: [
+                _TxnIcon(isExpense: isExpense, color: color),
+                const SizedBox(width: 14),
+                Expanded(child: _TxnDetails(txn: txn)),
+                const SizedBox(width: 10),
+                Text(
+                  '${isExpense ? "-" : "+"}${AppConstants.formatCurrency(txn.amount)}',
+                  style: AppTheme.labelLarge.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

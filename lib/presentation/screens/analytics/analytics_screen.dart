@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/transaction_model.dart';
@@ -75,13 +76,19 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final sortedPersons = personExpenses.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    final dailyData = <int, double>{};
-    if (_selectedPeriod == 1) {
-      for (final t in periodTxns.where((t) => t.type == TransactionType.expense)) {
-        final day = t.dateTime.day;
-        dailyData[day] = (dailyData[day] ?? 0) + t.amount;
+    final now = DateTime.now();
+    final weeklyData = <DateTime, double>{};
+    for (int i = 6; i >= 0; i--) {
+      final day = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+      weeklyData[day] = 0;
+    }
+    for (final t in allTxns.where((t) => t.type == TransactionType.expense)) {
+      final dayKey = DateTime(t.dateTime.year, t.dateTime.month, t.dateTime.day);
+      if (weeklyData.containsKey(dayKey)) {
+        weeklyData[dayKey] = weeklyData[dayKey]! + t.amount;
       }
     }
+    final weeklyEntries = weeklyData.entries.toList();
 
     return SafeArea(
       child: CustomScrollView(
@@ -208,7 +215,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Expense by Category', style: AppTheme.titleLarge),
+                    Text('Expense by Category ($periodLabel)', style: AppTheme.titleLarge),
                     const SizedBox(height: AppTheme.lg),
                     Card(
                       child: Padding(
@@ -227,17 +234,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       .asMap()
                                       .entries
                                       .map((e) {
+                                    final pct = expense > 0
+                                        ? (e.value.value / expense * 100)
+                                        : 0.0;
                                     return PieChartSectionData(
                                       color: chartColors[e.key % chartColors.length],
                                       value: e.value.value,
-                                      title: expense > 0
-                                          ? '${(e.value.value / expense * 100).toInt()}%'
-                                          : '0%',
+                                      title: '',
                                       radius: 45,
-                                      titleStyle: AppTheme.labelSmall.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                      ),
                                     );
                                   }).toList(),
                                 ),
@@ -246,6 +250,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             const SizedBox(height: AppTheme.lg),
                             ...sortedTags.take(8).toList().asMap().entries.map(
                               (e) {
+                                final pct = expense > 0
+                                    ? (e.value.value / expense * 100)
+                                    : 0.0;
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(vertical: AppTheme.xs),
                                   child: Row(
@@ -262,6 +269,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       Expanded(
                                           child: Text(e.value.key,
                                               style: AppTheme.bodyMedium.copyWith(fontSize: 13))),
+                                      Text(
+                                        '${pct.toStringAsFixed(1)}%',
+                                        style: AppTheme.labelMedium.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
                                       Text(
                                         AppConstants.formatCurrency(e.value.value),
                                         style: AppTheme.labelMedium.copyWith(
@@ -338,36 +353,37 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
               ),
             ),
-          if (_selectedPeriod == 1 && dailyData.isNotEmpty)
+          if (weeklyEntries.any((e) => e.value > 0))
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Daily Expense Trend', style: AppTheme.titleLarge),
+                    Text('This Week\'s Expenses', style: AppTheme.titleLarge),
                     const SizedBox(height: AppTheme.md),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(AppTheme.lg),
                         child: SizedBox(
-                          height: 200,
+                          height: 220,
                           child: BarChart(
                             BarChartData(
-                              barGroups: List.generate(
-                                DateTime.now().day,
-                                (i) => BarChartGroupData(
-                                  x: i + 1,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: dailyData[i + 1] ?? 0,
-                                      color: AppTheme.accent1,
-                                      width: 8,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              barGroups: weeklyEntries
+                                  .asMap()
+                                  .entries
+                                  .map((e) => BarChartGroupData(
+                                        x: e.key,
+                                        barRods: [
+                                          BarChartRodData(
+                                            toY: e.value.value,
+                                            color: AppTheme.accent1,
+                                            width: 20,
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                                          ),
+                                        ],
+                                      ))
+                                  .toList(),
                               titlesData: FlTitlesData(
                                 leftTitles: const AxisTitles(
                                     sideTitles: SideTitles(showTitles: false)),
@@ -378,23 +394,48 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 bottomTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
+                                    reservedSize: 36,
                                     getTitlesWidget: (value, meta) {
-                                      if (value.toInt() % 5 == 0 ||
-                                          value.toInt() == 1) {
-                                        return Text(
-                                          '${value.toInt()}',
-                                          style: AppTheme.labelSmall.copyWith(
-                                              fontSize: 10,
-                                              color: AppTheme.textMuted),
-                                        );
+                                      final idx = value.toInt();
+                                      if (idx < 0 || idx >= weeklyEntries.length) {
+                                        return const SizedBox.shrink();
                                       }
-                                      return const SizedBox.shrink();
+                                      final date = weeklyEntries[idx].key;
+                                      final dayLabel = DateFormat('E').format(date);
+                                      final dateLabel = '${date.day}/${date.month}';
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const SizedBox(height: 4),
+                                          Text(dayLabel,
+                                              style: AppTheme.labelSmall.copyWith(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppTheme.textSecondary)),
+                                          Text(dateLabel,
+                                              style: AppTheme.labelSmall.copyWith(
+                                                  fontSize: 9,
+                                                  color: AppTheme.textMuted)),
+                                        ],
+                                      );
                                     },
                                   ),
                                 ),
                               ),
                               gridData: const FlGridData(show: false),
                               borderData: FlBorderData(show: false),
+                              barTouchData: BarTouchData(
+                                touchTooltipData: BarTouchTooltipData(
+                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                    final date = weeklyEntries[group.x].key;
+                                    return BarTooltipItem(
+                                      '${DateFormat('MMM d').format(date)}\n${AppConstants.formatCurrency(rod.toY)}',
+                                      AppTheme.labelSmall.copyWith(
+                                          color: Colors.white, fontWeight: FontWeight.w700),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                         ),
