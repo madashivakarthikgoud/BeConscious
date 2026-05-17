@@ -31,8 +31,22 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final allTxns = ref.watch(transactionProvider);
-    final tags = ref.watch(tagProvider);
-    final persons = ref.watch(personProvider);
+    final managedTags = ref.watch(tagProvider);
+    final managedPersons = ref.watch(personProvider);
+
+    // Collect ALL tags actually used in transactions + managed tags
+    final allUsedTags = <String>{};
+    final allUsedPersons = <String>{};
+    for (final t in allTxns) {
+      allUsedTags.addAll(t.tags);
+      if (t.moneySourcePerson.isNotEmpty) allUsedPersons.add(t.moneySourcePerson);
+      if (t.beneficiaryPerson.isNotEmpty) allUsedPersons.add(t.beneficiaryPerson);
+    }
+    allUsedTags.addAll(managedTags);
+    allUsedPersons.addAll(managedPersons);
+
+    final tags = allUsedTags.toList()..sort();
+    final persons = allUsedPersons.toList()..sort();
 
     List<TransactionModel> filtered = allTxns.where((t) {
       if (_filterType == 'Income' && t.type != TransactionType.income) return false;
@@ -43,13 +57,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           t.beneficiaryPerson != _filterPerson) return false;
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
-        // FIX: Search across description, notes, tags, and persons
+        // Search across ALL fields
         final matchDesc = t.description.toLowerCase().contains(q);
         final matchNotes = (t.notes ?? '').toLowerCase().contains(q);
         final matchTags = t.tags.any((tag) => tag.toLowerCase().contains(q));
         final matchSource = t.moneySourcePerson.toLowerCase().contains(q);
         final matchBeneficiary = t.beneficiaryPerson.toLowerCase().contains(q);
-        if (!matchDesc && !matchNotes && !matchTags && !matchSource && !matchBeneficiary) {
+        final matchAmount = t.amount.toStringAsFixed(2).contains(q);
+        final matchPayMode = t.paymentMode.name.toLowerCase().contains(q);
+        if (!matchDesc && !matchNotes && !matchTags && !matchSource && 
+            !matchBeneficiary && !matchAmount && !matchPayMode) {
           return false;
         }
       }
