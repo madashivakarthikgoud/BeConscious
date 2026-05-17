@@ -394,8 +394,12 @@ class SettingsScreen extends ConsumerWidget {
   static void _openGitHub() async {
     final uri =
         Uri.parse('https://github.com/madashivakarthikgoud');
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      } catch (_) {}
     }
   }
 

@@ -229,6 +229,12 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: const Color(0xFF1A3324),
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        actionTextColor: accent1,
         behavior: SnackBarBehavior.floating,
         elevation: 0,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
