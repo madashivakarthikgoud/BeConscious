@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import 'pop_calculator.dart';
@@ -43,7 +44,10 @@ class ShellScreen extends StatelessWidget {
             ),
             child: BottomNavigationBar(
               currentIndex: idx,
-              onTap: (i) => context.go(_tabs[i]),
+              onTap: (i) {
+                HapticFeedback.selectionClick();
+                context.go(_tabs[i]);
+              },
               selectedFontSize: 10,
               unselectedFontSize: 10,
               items: const [
@@ -88,7 +92,10 @@ class ShellScreen extends StatelessWidget {
           ],
         ),
         child: FloatingActionButton(
-          onPressed: () => _showQuickAddSheet(context),
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            _showQuickAddSheet(context);
+          },
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           child: const Icon(Icons.add_rounded, size: 28),
         ),
@@ -219,8 +226,12 @@ class _QuickAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: GestureDetector(
-        onTap: onTap,
-        child: Container(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
             color: color.withOpacity(0.08),

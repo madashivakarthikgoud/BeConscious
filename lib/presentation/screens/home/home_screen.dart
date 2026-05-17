@@ -57,7 +57,7 @@ class HomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  GestureDetector(
+                  TapScale(
                     onTap: () => PopCalculator.show(context),
                     child: Container(
                       width: 42,
@@ -72,7 +72,7 @@ class HomeScreen extends ConsumerWidget {
                           color: AppTheme.accent2, size: 20),
                     ),
                   ),
-                  GestureDetector(
+                  TapScale(
                     onTap: () => context.push('/settings'),
                     child: Container(
                       width: 42,

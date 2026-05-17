@@ -17,6 +17,23 @@ import '../../presentation/widgets/shell_screen.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Smooth slide-up page transition for detail screens
+CustomTransitionPage _slideUpPage(Widget child, GoRouterState state) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final tween = Tween(begin: const Offset(0, 0.05), end: Offset.zero)
+          .chain(CurveTween(curve: Curves.easeOutCubic));
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: FadeTransition(opacity: animation, child: child),
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 300),
+  );
+}
+
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/home',
@@ -60,45 +77,55 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/add-transaction',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
-        return AddTransactionScreen(editTransaction: extra?['transaction']);
+        return _slideUpPage(
+          AddTransactionScreen(editTransaction: extra?['transaction']),
+          state,
+        );
       },
     ),
     GoRoute(
       path: '/add-loan',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
-        return AddLoanScreen(editLoan: extra?['loan']);
+        return _slideUpPage(AddLoanScreen(editLoan: extra?['loan']), state);
       },
     ),
     GoRoute(
       path: '/loan-detail/:id',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
-        return LoanDetailScreen(loanId: state.pathParameters['id']!);
+      pageBuilder: (context, state) {
+        return _slideUpPage(
+          LoanDetailScreen(loanId: state.pathParameters['id']!),
+          state,
+        );
       },
     ),
     GoRoute(
       path: '/add-savings',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
-        return AddSavingsScreen(editGoal: extra?['goal']);
+        return _slideUpPage(AddSavingsScreen(editGoal: extra?['goal']), state);
       },
     ),
     GoRoute(
       path: '/savings-detail/:id',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
-        return SavingsDetailScreen(goalId: state.pathParameters['id']!);
+      pageBuilder: (context, state) {
+        return _slideUpPage(
+          SavingsDetailScreen(goalId: state.pathParameters['id']!),
+          state,
+        );
       },
     ),
     GoRoute(
       path: '/settings',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const SettingsScreen(),
+      pageBuilder: (context, state) =>
+          _slideUpPage(const SettingsScreen(), state),
     ),
   ],
 );

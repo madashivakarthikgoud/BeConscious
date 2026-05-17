@@ -38,6 +38,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: backgroundDark,
+      splashFactory: InkSparkle.splashFactory,
       colorScheme: const ColorScheme.dark(
         primary: accent1,
         secondary: accent2,
